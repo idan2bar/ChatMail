@@ -44,6 +44,26 @@ function saveWidth(w) {
   } catch {}
 }
 
+// Persists the selected contact per tab, so reloading the Gmail tab keeps the card selected and
+// its search showing instead of landing back on a deselected page. sessionStorage (not
+// localStorage) keeps this from leaking into other tabs/windows.
+const SELECTION_KEY = 'chatmail:selectedContact';
+
+function loadSelection() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SELECTION_KEY));
+    if (saved && typeof saved.address === 'string' && typeof saved.name === 'string') return saved;
+  } catch {}
+  return null;
+}
+
+function saveSelection(selection) {
+  try {
+    if (selection) sessionStorage.setItem(SELECTION_KEY, JSON.stringify(selection));
+    else sessionStorage.removeItem(SELECTION_KEY);
+  } catch {}
+}
+
 function setWidth(panel, w) {
   panel.style.flexBasis = `${w}px`;
   panel.style.width = `${w}px`;
@@ -428,14 +448,46 @@ async function main() {
     [100, 400, 1000].forEach((ms) => setTimeout(set, ms));
   }
 
+  const queryFor = (address) => `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
+
+  // The query for the currently selected contact, so a route change can be recognized as "ours"
+  // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
+  // recognizes the page's own reload landing back on that search, so restoring the saved selection
+  // below doesn't immediately get read as a real search and cleared.
+  let expectedQuery = null;
+
+  // Restore the contact selected before a reload, so the panel and the search box right away
+  // reflect the page Gmail already re-rendered, instead of flashing deselected.
+  const saved = loadSelection();
+  if (saved) {
+    selectedAddress = saved.address;
+    expectedQuery = queryFor(saved.address);
+    setSearchBoxText(saved.name);
+  }
+
+  sdk.Router.handleAllRoutes((routeView) => {
+    const isOurSearch =
+      routeView.getRouteID() === sdk.Router.NativeRouteIDs.SEARCH && routeView.getParams().query === expectedQuery;
+    if (isOurSearch) return;
+    if (selectedAddress) {
+      selectedAddress = null;
+      expectedQuery = null;
+      saveSelection(null);
+      refresh();
+    }
+  });
+
   function onSelect(address) {
     // A real Gmail search over the whole mailbox; deselecting returns to the inbox.
     if (address) {
       const name = contacts.get(address).name || address;
-      const query = `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
-      sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query, page: '1' });
+      expectedQuery = queryFor(address);
+      saveSelection({ address, name });
+      sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query: expectedQuery, page: '1' });
       setSearchBoxText(name);
     } else {
+      expectedQuery = null;
+      saveSelection(null);
       sdk.Router.goto(sdk.Router.NativeRouteIDs.INBOX);
     }
   }
