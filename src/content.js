@@ -371,6 +371,7 @@ async function main() {
   // derived from them instead of from Gmail's internal class names or ids.
   let navEl = null;
   let listEl = null;
+  let runWatch = null;
 
   // A nav item gives us a stable element inside the main (left) menu.
   sdk.NavMenu.addNavItem({ name: 'Chat Mail' }).getElement().then((el) => {
@@ -520,13 +521,32 @@ async function main() {
   }
 
   // For a selected contact, Gmail shows a contact card (avatar, the address, an icon row repeating
-  // it, chat actions) above the results. The SDK has no API for it, so it's found by content inside
-  // the SDK-anchored container: a leaf `role="contentinfo"` element whose text is the address,
-  // widened to the largest ancestor that is still just that card (short text, no mail-list table,
-  // not the panel).
+  // it, chat actions) above the results, plus a row of search filter chips. The SDK has no API for
+  // them (its hideSearchPageFilterToolbar CSS targets outdated selectors), so they're found by
+  // content inside the SDK-anchored container, once the results have rendered. Before that the
+  // mail list's table doesn't exist yet, so the card's "short text, no table" widening below would
+  // run up into the element that is about to hold the list and hide it.
   function watchContactRow(root) {
-    const hide = () => {
-      if (!selectedAddress) return;
+    // Container of the filter row: it outlives the search page, so its styles are undone later.
+    let filterContainer = null;
+    const containerStyles = {
+      'box-sizing': 'border-box',
+      height: '44px',
+      'min-height': '44px',
+      'padding-top': '12px',
+      'padding-bottom': '8px',
+    };
+
+    const run = () => {
+      if (!expectedQuery) {
+        for (const prop of Object.keys(containerStyles)) filterContainer?.style.removeProperty(prop);
+        filterContainer = null;
+        return;
+      }
+      if (!listEl || !listEl.isConnected) return;
+
+      // Contact card: a leaf `role="contentinfo"` whose text is the address, widened to the largest
+      // ancestor that is still just that card (short text, no mail-list table, not the panel).
       const address = selectedAddress.toLowerCase();
       const maxText = address.length * 6 + 150;
       for (const el of root.querySelectorAll('[role="contentinfo"]')) {
@@ -540,35 +560,22 @@ async function main() {
         ) {
           card = card.parentElement;
         }
-        if (card !== el && card.style.display !== 'none') card.style.display = 'none';
+        if (card !== el) card.style.display = 'none';
       }
-    };
-    // The search refinement toolbar (the filter chips row above the results) carries the page's
-    // query in a `data-query` attribute, so the one for the selected contact's search is found by
-    // that, not by class names or its localized label. The row is removed from the layout and its
-    // container, whose fixed height was sized for two rows, is shrunk to one row (44px: 12px padding
-    // above, 8px below; the sides keep Gmail's own
-    // padding). Collapsing just the row left the list empty and the second row centered in the tall
-    // container.
-    const hideFilters = () => {
-      if (!expectedQuery) return;
+
+      // Filter chips row: the toolbar holding the search's `data-query`. It's removed, and its
+      // container (fixed height for two rows) is shrunk to the one remaining row plus padding.
       for (const q of root.querySelectorAll('[data-query]')) {
-        if (q.dataset.query !== expectedQuery) continue;
-        const bar = q.closest('[role="toolbar"]');
+        const bar = q.dataset.query === expectedQuery && q.closest('[role="toolbar"]');
         if (!bar || bar.style.display === 'none') continue;
         bar.style.display = 'none';
-        const container = bar.parentElement;
-        container.style.setProperty('box-sizing', 'border-box');
-        container.style.setProperty('height', '44px', 'important');
-        container.style.setProperty('min-height', '44px', 'important');
-        container.style.setProperty('padding-top', '12px', 'important');
-        container.style.setProperty('padding-bottom', '8px', 'important');
+        filterContainer = bar.parentElement;
+        for (const [prop, value] of Object.entries(containerStyles)) {
+          filterContainer.style.setProperty(prop, value, 'important');
+        }
       }
     };
-    const run = () => {
-      hide();
-      hideFilters();
-    };
+    runWatch = run;
     new MutationObserver(run).observe(root, { childList: true, subtree: true });
     run();
   }
@@ -577,6 +584,7 @@ async function main() {
   sdk.Lists.registerThreadRowViewHandler((row) => {
     listEl = row.getElement();
     mount();
+    if (runWatch) setTimeout(runWatch, 200);
   });
 
   function mount() {
