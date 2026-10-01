@@ -414,11 +414,27 @@ async function main() {
     if (nextPageToken !== null && list.scrollHeight <= list.clientHeight + 40) loadMore();
   }
 
+  // The SDK's query rewriter requires an `app:`/`has:` term (Gmail rejects anything else), so
+  // it can't show a plain name. Instead, the real query runs as-is and the search box text is
+  // reset to the contact's display name right after — the SDK has no API for the search box, so
+  // this is a raw DOM fallback on the search input's stable `name="q"`. Gmail fills the box back
+  // in after navigating, so it's set again shortly after too.
+  function setSearchBoxText(text) {
+    const set = () => {
+      const input = document.querySelector('input[name="q"]');
+      if (input && input.value !== text) input.value = text;
+    };
+    set();
+    [100, 400, 1000].forEach((ms) => setTimeout(set, ms));
+  }
+
   function onSelect(address) {
     // A real Gmail search over the whole mailbox; deselecting returns to the inbox.
     if (address) {
+      const name = contacts.get(address).name || address;
       const query = `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
       sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query, page: '1' });
+      setSearchBoxText(name);
     } else {
       sdk.Router.goto(sdk.Router.NativeRouteIDs.INBOX);
     }
