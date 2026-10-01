@@ -543,8 +543,34 @@ async function main() {
         if (card !== el && card.style.display !== 'none') card.style.display = 'none';
       }
     };
-    new MutationObserver(hide).observe(root, { childList: true, subtree: true });
-    hide();
+    // The search refinement toolbar (the filter chips row above the results) carries the page's
+    // query in a `data-query` attribute, so the one for the selected contact's search is found by
+    // that, not by class names or its localized label. The row is removed from the layout and its
+    // container, whose fixed height was sized for two rows, is shrunk to one row (44px: 12px padding
+    // above, 8px below; the sides keep Gmail's own
+    // padding). Collapsing just the row left the list empty and the second row centered in the tall
+    // container.
+    const hideFilters = () => {
+      if (!expectedQuery) return;
+      for (const q of root.querySelectorAll('[data-query]')) {
+        if (q.dataset.query !== expectedQuery) continue;
+        const bar = q.closest('[role="toolbar"]');
+        if (!bar || bar.style.display === 'none') continue;
+        bar.style.display = 'none';
+        const container = bar.parentElement;
+        container.style.setProperty('box-sizing', 'border-box');
+        container.style.setProperty('height', '44px', 'important');
+        container.style.setProperty('min-height', '44px', 'important');
+        container.style.setProperty('padding-top', '12px', 'important');
+        container.style.setProperty('padding-bottom', '8px', 'important');
+      }
+    };
+    const run = () => {
+      hide();
+      hideFilters();
+    };
+    new MutationObserver(run).observe(root, { childList: true, subtree: true });
+    run();
   }
 
   // Only used to find an anchor element inside the mail list for mounting.
@@ -584,4 +610,8 @@ async function main() {
   }
 }
 
-main().catch((err) => console.error('[ChatMail]', err));
+// The popup toggle stores this flag; enabled unless explicitly switched off.
+chrome.storage.local
+  .get('chatmail:enabled')
+  .then((r) => (r['chatmail:enabled'] === false ? null : main()))
+  .catch((err) => console.error('[ChatMail]', err));
