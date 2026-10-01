@@ -519,6 +519,34 @@ async function main() {
     }
   }
 
+  // For a selected contact, Gmail shows a contact card (avatar, the address, an icon row repeating
+  // it, chat actions) above the results. The SDK has no API for it, so it's found by content inside
+  // the SDK-anchored container: a leaf `role="contentinfo"` element whose text is the address,
+  // widened to the largest ancestor that is still just that card (short text, no mail-list table,
+  // not the panel).
+  function watchContactRow(root) {
+    const hide = () => {
+      if (!selectedAddress) return;
+      const address = selectedAddress.toLowerCase();
+      const maxText = address.length * 6 + 150;
+      for (const el of root.querySelectorAll('[role="contentinfo"]')) {
+        if (el.children.length || el.textContent.trim().toLowerCase() !== address) continue;
+        let card = el;
+        while (
+          card.parentElement &&
+          card.parentElement !== root &&
+          !card.parentElement.querySelector(`table, #${PANEL_ID}`) &&
+          card.parentElement.textContent.length <= maxText
+        ) {
+          card = card.parentElement;
+        }
+        if (card !== el && card.style.display !== 'none') card.style.display = 'none';
+      }
+    };
+    new MutationObserver(hide).observe(root, { childList: true, subtree: true });
+    hide();
+  }
+
   // Only used to find an anchor element inside the mail list for mounting.
   sdk.Lists.registerThreadRowViewHandler((row) => {
     listEl = row.getElement();
@@ -534,6 +562,8 @@ async function main() {
     // The main white area (inbox tabs + list) is the child holding the list.
     const mainArea = container && childContaining(container, listEl);
     if (!mainArea) return;
+
+    watchContactRow(container);
 
     const panel = createPanel();
     // InboxSDK expects the menu's next sibling to be the main area, so keep that DOM order
