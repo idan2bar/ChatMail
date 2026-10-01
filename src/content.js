@@ -197,9 +197,33 @@ function createPanel() {
     padding: '4px',
   });
   const hideBar = document.createElement('style');
-  hideBar.textContent = `#${PANEL_ID} > div::-webkit-scrollbar { display: none; }`;
+  hideBar.textContent =
+    `#${PANEL_ID} > div::-webkit-scrollbar { display: none; }` +
+    '@keyframes chatmail-spin { to { transform: rotate(360deg); } }' +
+    // With no cards yet the spinner is the list's only child: center it in the whole panel.
+    `#${PANEL_ID} > div > [role="status"]:only-child { position: absolute; inset: 0; align-items: center; padding: 0; pointer-events: none; }`;
   panel.append(hideBar);
   panel.list = list;
+
+  // Shown below the last card while the next batch loads (renderContacts keeps it last).
+  const spinner = document.createElement('div');
+  spinner.hidden = true;
+  spinner.setAttribute('role', 'status');
+  spinner.setAttribute('aria-label', 'Loading more contacts');
+  Object.assign(spinner.style, { display: 'flex', justifyContent: 'center', padding: '20px 0' });
+  const ring = document.createElement('div');
+  Object.assign(ring.style, {
+    width: '28px',
+    height: '28px',
+    boxSizing: 'border-box',
+    border: '3px solid transparent',
+    borderTopColor: '#1a73e8',
+    borderRadius: '50%',
+    animation: 'chatmail-spin 0.8s linear infinite',
+  });
+  spinner.append(ring);
+  panel.spinner = spinner;
+  list.append(spinner);
   panel.append(list, createResizeHandle(panel));
   return panel;
 }
@@ -291,7 +315,7 @@ function createCard({ address, name, subject, unread }) {
  * with a `chatmail:contactselect` event on the panel for later filtering.
  */
 function renderContacts(panel, contacts) {
-  panel.list.replaceChildren(...contacts.map(createCard));
+  panel.list.replaceChildren(...contacts.map(createCard), panel.spinner);
   panel.list.setAttribute('role', 'listbox');
 }
 
@@ -416,6 +440,7 @@ async function main() {
     const panel = document.getElementById(PANEL_ID);
     if (!panel || loading || nextPageToken === null) return;
     loading = true;
+    panel.spinner.hidden = false;
     try {
       const page = await askBackground({ type: 'chatmail:listInbox', pageToken: nextPageToken });
       nextPageToken = page.nextPageToken;
@@ -427,9 +452,11 @@ async function main() {
       console.error('[ChatMail]', err);
       showStatus(panel, `Couldn't load contacts: ${err.message}`);
       loading = false;
+      panel.spinner.hidden = true;
       return;
     }
     loading = false;
+    panel.spinner.hidden = true;
     const list = panel.list;
     if (nextPageToken !== null && list.scrollHeight <= list.clientHeight + 40) loadMore();
   }
