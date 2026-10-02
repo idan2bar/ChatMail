@@ -371,7 +371,6 @@ async function main() {
   // derived from them instead of from Gmail's internal class names or ids.
   let navEl = null;
   let listEl = null;
-  let runWatch = null;
 
   // A nav item gives us a stable element inside the main (left) menu.
   sdk.NavMenu.addNavItem({ name: 'Chat Mail' }).getElement().then((el) => {
@@ -523,59 +522,61 @@ async function main() {
   // For a selected contact, Gmail shows a contact card (avatar, the address, an icon row repeating
   // it, chat actions) above the results, plus a row of search filter chips. The SDK has no API for
   // them (its hideSearchPageFilterToolbar CSS targets outdated selectors), so they're found by
-  // content inside the SDK-anchored container, once the results have rendered. Before that the
-  // mail list's table doesn't exist yet, so the card's "short text, no table" widening below would
-  // run up into the element that is about to hold the list and hide it.
+  // content inside the SDK-anchored container. They're styled through marker attributes that are
+  // recomputed on every change: a wrong guess made while the page is still rendering (e.g. the card
+  // shows before the mail list's table exists, so the card's "no table" widening runs up into the
+  // element about to hold the list) is corrected as soon as the table appears, and deselecting
+  // simply clears the markers.
   function watchContactRow(root) {
-    // Container of the filter row: it outlives the search page, so its styles are undone later.
-    let filterContainer = null;
-    const containerStyles = {
-      'box-sizing': 'border-box',
-      height: '44px',
-      'min-height': '44px',
-      'padding-top': '12px',
-      'padding-bottom': '8px',
+    const HIDDEN = 'data-chatmail-hidden';
+    const FILTERS = 'data-chatmail-filters';
+    const style = document.createElement('style');
+    style.textContent =
+      `[${HIDDEN}] { display: none !important; }` +
+      `[${FILTERS}] { box-sizing: border-box !important; height: 44px !important; min-height: 44px !important;` +
+      ' padding-top: 12px !important; padding-bottom: 8px !important; }';
+    document.head.append(style);
+
+    // Puts `attr` on exactly the elements in `els`.
+    const mark = (attr, els) => {
+      for (const el of root.querySelectorAll(`[${attr}]`)) if (!els.has(el)) el.removeAttribute(attr);
+      for (const el of els) if (!el.hasAttribute(attr)) el.setAttribute(attr, '');
     };
 
     const run = () => {
-      if (!expectedQuery) {
-        for (const prop of Object.keys(containerStyles)) filterContainer?.style.removeProperty(prop);
-        filterContainer = null;
-        return;
-      }
-      if (!listEl || !listEl.isConnected) return;
-
-      // Contact card: a leaf `role="contentinfo"` whose text is the address, widened to the largest
-      // ancestor that is still just that card (short text, no mail-list table, not the panel).
-      const address = selectedAddress.toLowerCase();
-      const maxText = address.length * 6 + 150;
-      for (const el of root.querySelectorAll('[role="contentinfo"]')) {
-        if (el.children.length || el.textContent.trim().toLowerCase() !== address) continue;
-        let card = el;
-        while (
-          card.parentElement &&
-          card.parentElement !== root &&
-          !card.parentElement.querySelector(`table, #${PANEL_ID}`) &&
-          card.parentElement.textContent.length <= maxText
-        ) {
-          card = card.parentElement;
+      const hidden = new Set();
+      const filters = new Set();
+      if (expectedQuery) {
+        // Contact card: a leaf `role="contentinfo"` whose text is the address, widened to the largest
+        // ancestor that is still just that card (short text, no mail-list table, not the panel).
+        const address = selectedAddress.toLowerCase();
+        const maxText = address.length * 6 + 150;
+        for (const el of root.querySelectorAll('[role="contentinfo"]')) {
+          if (el.children.length || el.textContent.trim().toLowerCase() !== address) continue;
+          let card = el;
+          while (
+            card.parentElement &&
+            card.parentElement !== root &&
+            !card.parentElement.querySelector(`table, #${PANEL_ID}`) &&
+            card.parentElement.textContent.length <= maxText
+          ) {
+            card = card.parentElement;
+          }
+          if (card !== el) hidden.add(card);
         }
-        if (card !== el) card.style.display = 'none';
-      }
 
-      // Filter chips row: the toolbar holding the search's `data-query`. It's removed, and its
-      // container (fixed height for two rows) is shrunk to the one remaining row plus padding.
-      for (const q of root.querySelectorAll('[data-query]')) {
-        const bar = q.dataset.query === expectedQuery && q.closest('[role="toolbar"]');
-        if (!bar || bar.style.display === 'none') continue;
-        bar.style.display = 'none';
-        filterContainer = bar.parentElement;
-        for (const [prop, value] of Object.entries(containerStyles)) {
-          filterContainer.style.setProperty(prop, value, 'important');
+        // Filter chips row: the toolbar holding the search's `data-query`. It's hidden, and its
+        // container (fixed height for two rows) is shrunk to the one remaining row plus padding.
+        for (const q of root.querySelectorAll('[data-query]')) {
+          const bar = q.dataset.query === expectedQuery && q.closest('[role="toolbar"]');
+          if (!bar) continue;
+          hidden.add(bar);
+          filters.add(bar.parentElement);
         }
       }
+      mark(HIDDEN, hidden);
+      mark(FILTERS, filters);
     };
-    runWatch = run;
     new MutationObserver(run).observe(root, { childList: true, subtree: true });
     run();
   }
@@ -584,7 +585,6 @@ async function main() {
   sdk.Lists.registerThreadRowViewHandler((row) => {
     listEl = row.getElement();
     mount();
-    if (runWatch) setTimeout(runWatch, 200);
   });
 
   function mount() {
