@@ -482,6 +482,7 @@ async function main() {
   // recognizes the page's own reload landing back on that search, so restoring the saved selection
   // below doesn't immediately get read as a real search and cleared.
   let expectedQuery = null;
+  let selectedName = null;
 
   // Restore the contact selected before a reload, so the panel and the search box right away
   // reflect the page Gmail already re-rendered, instead of flashing deselected.
@@ -489,13 +490,19 @@ async function main() {
   if (saved) {
     selectedAddress = saved.address;
     expectedQuery = queryFor(saved.address);
-    setSearchBoxText(saved.name);
+    selectedName = saved.name;
+    setSearchBoxText(selectedName);
   }
 
   sdk.Router.handleAllRoutes((routeView) => {
-    const isOurSearch =
-      routeView.getRouteID() === sdk.Router.NativeRouteIDs.SEARCH && routeView.getParams().query === expectedQuery;
-    if (isOurSearch) return;
+    const routeID = routeView.getRouteID();
+    // Opening a mail from the results is a THREAD route (no query param), still within the selection.
+    const isOurSearch = routeID === sdk.Router.NativeRouteIDs.SEARCH && routeView.getParams().query === expectedQuery;
+    if (isOurSearch || routeID === sdk.Router.NativeRouteIDs.THREAD) {
+      // Gmail refills the search box with the raw query on every navigation within the selection.
+      if (selectedAddress) setSearchBoxText(selectedName);
+      return;
+    }
     if (selectedAddress) {
       selectedAddress = null;
       expectedQuery = null;
@@ -509,6 +516,7 @@ async function main() {
     if (address) {
       const name = contacts.get(address).name || address;
       expectedQuery = queryFor(address);
+      selectedName = name;
       saveSelection({ address, name });
       sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query: expectedQuery, page: '1' });
       setSearchBoxText(name);
@@ -577,7 +585,15 @@ async function main() {
       mark(HIDDEN, hidden);
       mark(FILTERS, filters);
     };
-    new MutationObserver(run).observe(root, { childList: true, subtree: true });
+    // Text and the chips' `data-query` can be filled in after the nodes exist (e.g. when returning
+    // from a mail), so those changes are watched too; the markers themselves don't trigger it.
+    new MutationObserver(run).observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['data-query'],
+    });
     run();
   }
 
