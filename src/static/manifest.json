@@ -10,7 +10,8 @@
   },
   "permissions": [
     "scripting",
-    "identity"
+    "identity",
+    "storage"
   ],
   "host_permissions": [
     "https://mail.google.com/",

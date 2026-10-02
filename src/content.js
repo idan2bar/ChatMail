@@ -619,6 +619,8 @@ async function main() {
 }
 
 // The popup toggle stores this flag; enabled unless explicitly switched off.
+// Loading Gmail applies the setting, so the popup's "refresh needed" note is cleared.
+chrome.storage.local.set({ 'chatmail:refreshPending': false });
 chrome.storage.local
   .get('chatmail:enabled')
   .then((r) => (r['chatmail:enabled'] === false ? null : main()))
