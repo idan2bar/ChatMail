@@ -12,6 +12,7 @@
       .slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: transform .15s; }
       input:checked + .slider { background: #1a73e8; }
       input:checked + .slider::before { transform: translateX(18px); }
+      .hint a { text-decoration: none; }
       .hint { margin: 10px 0 0; color: #666; font-size: 12px; }
       #reload-box { display: none; margin-top: 12px; padding: 10px; background: #fff4e5; border-radius: 8px; font-size: 12px; }
       #reload-box button { margin-top: 8px; padding: 6px 12px; border: 0; border-radius: 6px; background: #1a73e8; color: #fff; cursor: pointer; }
@@ -25,7 +26,7 @@
         <span class="slider"></span>
       </label>
     </div>
-    <p class="hint">Open Gmail to see how it got better!</p>
+    <p class="hint"><a href="https://mail.google.com" target="_blank">Open Gmail</a> to see how it got better!</p>
     <div id="reload-box">
       Refresh Gmail for the change to take effect.
       <br /><button id="reload">Refresh Gmail</button>
