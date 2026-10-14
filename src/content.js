@@ -237,7 +237,41 @@ const USER_ICON =
 
 let selectedAddress = null;
 
-function createCard({ address, name, subject, unread }) {
+// One avatar element per address, reused by every re-render: a rebuilt avatar would show the generic
+// icon again until its photo reloaded, which flickers on each selection change.
+const avatars = new Map();
+
+function getAvatar(address, photo) {
+  let avatar = avatars.get(address);
+  if (!avatar) {
+    avatar = document.createElement('div');
+    Object.assign(avatar.style, {
+      flex: '0 0 36px',
+      width: '36px',
+      height: '36px',
+      borderRadius: '50%',
+      background: '#9aa0a6',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    });
+    avatar.innerHTML = USER_ICON;
+    avatars.set(address, avatar);
+  }
+  if (photo && avatar.dataset.photo !== photo) {
+    // The icon stays until the image has loaded, and for good if it fails.
+    avatar.dataset.photo = photo;
+    const img = document.createElement('img');
+    img.src = photo;
+    img.referrerPolicy = 'no-referrer';
+    Object.assign(img.style, { width: '100%', height: '100%', objectFit: 'cover' });
+    img.addEventListener('load', () => avatar.replaceChildren(img));
+  }
+  return avatar;
+}
+
+function createCard({ address, name, subject, unread, photo }) {
   const card = document.createElement('div');
   card.dataset.address = address;
   card.setAttribute('role', 'option');
@@ -255,18 +289,7 @@ function createCard({ address, name, subject, unread }) {
     background: selected ? 'rgba(26,115,232,0.16)' : 'transparent',
   });
 
-  const avatar = document.createElement('div');
-  Object.assign(avatar.style, {
-    flex: '0 0 36px',
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    background: '#9aa0a6',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  });
-  avatar.innerHTML = USER_ICON;
+  const avatar = getAvatar(address, photo);
 
   const text = document.createElement('div');
   Object.assign(text.style, { minWidth: 0, flex: '1 1 auto' });
@@ -409,7 +432,11 @@ async function main() {
     if (!panel) return;
     renderContacts(
       panel,
-      [...contacts.values()].map((c) => ({ ...c, unread: unreadCounts.get(c.address) || 0 })),
+      [...contacts.values()].map((c) => ({
+        ...c,
+        unread: unreadCounts.get(c.address) || 0,
+        photo: photoUrls.get(c.address),
+      })),
     );
   }
 
@@ -435,6 +462,25 @@ async function main() {
     }
   }
 
+  // Address -> photo URL from the user's Google contacts. Cards show the generic icon until the
+  // image has loaded, and keep it for addresses without a photo.
+  const photoUrls = new Map();
+  const photoRequested = new Set();
+
+  async function loadPhotos() {
+    const addresses = [...contacts.keys()].filter((a) => !photoRequested.has(a));
+    addresses.forEach((a) => photoRequested.add(a));
+    if (!addresses.length) return;
+    try {
+      const photos = await askBackground({ type: 'chatmail:photos', addresses });
+      for (const [address, url] of Object.entries(photos)) photoUrls.set(address, url);
+      refresh();
+    } catch (err) {
+      console.error('[ChatMail]', err);
+      addresses.forEach((a) => photoRequested.delete(a)); // retry with the next page load
+    }
+  }
+
   /** Loads the next batch, and keeps going while the list doesn't fill the panel. */
   async function loadMore() {
     const panel = document.getElementById(PANEL_ID);
@@ -448,6 +494,7 @@ async function main() {
       showStatus(panel, '');
       refresh();
       loadUnreadCounts();
+      loadPhotos();
     } catch (err) {
       console.error('[ChatMail]', err);
       showStatus(panel, `Couldn't load contacts: ${err.message}`);
