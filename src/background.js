@@ -49,6 +49,8 @@ async function listInboxPage(pageToken) {
   return {
     nextPageToken,
     messages: details.map((msg) => ({
+      id: msg.id,
+      unread: !!msg.labelIds?.includes('UNREAD'),
       subject: header(msg, 'Subject'),
       from: header(msg, 'From'),
       to: header(msg, 'To'),
@@ -74,6 +76,58 @@ async function countUnread(address) {
 async function countUnreadMany(addresses) {
   const counts = await Promise.all(addresses.map(countUnread));
   return Object.fromEntries(addresses.map((a, i) => [a, counts[i]]));
+}
+
+/**
+ * Read/unread changes of inbox mail since `historyId` (Gmail's mailbox change log), as
+ * { historyId, changes: [{ delta, from, to, cc }] } with delta +1 (became unread) or -1 (was read).
+ * Without a `historyId` it only returns the current one, as the starting point. One cheap call,
+ * so it can be polled often, and it reports changes whichever way they were made in Gmail.
+ */
+async function unreadChanges(startHistoryId) {
+  if (!startHistoryId) {
+    const { historyId } = await gmailGet('profile', new URLSearchParams({ fields: 'historyId' }));
+    return { historyId, changes: [] };
+  }
+  const events = [];
+  let historyId = startHistoryId;
+  let pageToken;
+  do {
+    const params = new URLSearchParams({ startHistoryId, labelId: 'UNREAD', maxResults: '100' });
+    params.append('historyTypes', 'labelAdded');
+    params.append('historyTypes', 'labelRemoved');
+    if (pageToken) params.set('pageToken', pageToken);
+    let page;
+    try {
+      page = await gmailGet('history', params);
+    } catch (err) {
+      if (String(err.message).startsWith('Google API 404')) return unreadChanges(); // history too old: restart
+      throw err;
+    }
+    historyId = page.historyId || historyId;
+    pageToken = page.nextPageToken;
+    for (const h of page.history || []) {
+      for (const [list, delta] of [[h.labelsAdded, 1], [h.labelsRemoved, -1]]) {
+        for (const e of list || []) {
+          if (e.labelIds?.includes('UNREAD') && e.message.labelIds?.includes('INBOX')) {
+            events.push({ id: e.message.id, delta });
+          }
+        }
+      }
+    }
+  } while (pageToken);
+
+  const header = (msg, name) =>
+    msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
+  const changes = await Promise.all(
+    events.map(async ({ id, delta }) => {
+      const p = new URLSearchParams({ format: 'metadata' });
+      for (const h of ['From', 'To', 'Cc']) p.append('metadataHeaders', h);
+      const msg = await gmailGet(`messages/${id}`, p);
+      return { id, delta, from: header(msg, 'From'), to: header(msg, 'To'), cc: header(msg, 'Cc') };
+    }),
+  );
+  return { historyId, changes };
 }
 
 // --- Contact photos (People API) ----------------------------------------------
@@ -186,6 +240,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   let work;
   if (msg?.type === 'chatmail:listInbox') work = listInboxPage(msg.pageToken);
   else if (msg?.type === 'chatmail:countUnread') work = countUnreadMany(msg.addresses);
+  else if (msg?.type === 'chatmail:unreadChanges') work = unreadChanges(msg.historyId);
   else if (msg?.type === 'chatmail:photos') work = photosFor(msg.addresses);
   else if (msg?.type === 'chatmail:favicons') work = faviconsFor(msg.addresses);
   else return;

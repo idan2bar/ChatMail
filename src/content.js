@@ -364,7 +364,7 @@ function getAvatar(address, candidates) {
   return avatar;
 }
 
-function createCard({ address, name, subject, unread, images }) {
+function createCard({ address, name, subject, unread, latestUnread, images }) {
   const card = document.createElement('div');
   card.dataset.address = address;
   card.setAttribute('role', 'option');
@@ -413,7 +413,7 @@ function createCard({ address, name, subject, unread, images }) {
       padding: '0 5px',
       boxSizing: 'border-box',
       borderRadius: '9px',
-      background: '#1a73e8',
+      background: latestUnread ? '#1a73e8' : '#9aa0a6', // blue: latest mail unread; gray: read
       color: '#fff',
       fontSize: '11px',
       fontWeight: '500',
@@ -537,10 +537,10 @@ async function main() {
     );
 
   function addMessages(messages) {
-    for (const { subject, from, to, cc } of messages) {
+    for (const { id, unread, subject, from, to, cc } of messages) {
       for (const { address, name } of parseAddresses([from, to, cc].join(','))) {
         if (address === myAddress || contacts.has(address)) continue;
-        contacts.set(address, { address, name, subject: subject || '(no subject)' });
+        contacts.set(address, { address, name, subject: subject || '(no subject)', latestId: id, latestUnread: unread });
       }
     }
   }
@@ -774,6 +774,46 @@ async function main() {
     });
     run();
   }
+
+  // Read/unread changes made in Gmail (in the list, in an open thread, on another device) show up in
+  // the mailbox change log, which is polled with one cheap request. Each changed message moves the
+  // badges of its contacts by +1 / -1. A count at the API's cap is left alone, since the real
+  // number is unknown.
+  const POLL_MS = 1000;
+  let historyId;
+  let polling = false;
+
+  async function pollUnreadChanges() {
+    if (polling || document.hidden) return; // only the visible (active) tab polls
+    polling = true;
+    try {
+      const res = await askBackground({ type: 'chatmail:unreadChanges', historyId });
+      historyId = res.historyId;
+      if (res.changes.length) console.log('[ChatMail] unread changes', res.changes, [...unreadCounts]); // TEMP debug
+      for (const { id, delta, from, to, cc } of res.changes) {
+        for (const { address } of parseAddresses([from, to, cc].join(','))) {
+          const contact = contacts.get(address);
+          if (contact?.latestId === id) contact.latestUnread = delta > 0;
+          const n = unreadCounts.get(address);
+          if (n !== undefined && n < 100) unreadCounts.set(address, Math.max(0, n + delta));
+        }
+      }
+      if (res.changes.length) refresh();
+    } catch (err) {
+      if (!chrome.runtime?.id) {
+        // The extension was reloaded: this copy of the script is orphaned, a page reload brings the new one.
+        clearInterval(pollTimer);
+        console.warn('[ChatMail] Extension was reloaded; reload this tab.');
+      } else {
+        console.error('[ChatMail]', err);
+      }
+    } finally {
+      polling = false;
+    }
+  }
+  pollUnreadChanges();
+  const pollTimer = setInterval(pollUnreadChanges, POLL_MS);
+  document.addEventListener('visibilitychange', pollUnreadChanges); // catch up right away on returning
 
   // Only used to find an anchor element inside the mail list for mounting.
   sdk.Lists.registerThreadRowViewHandler((row) => {
