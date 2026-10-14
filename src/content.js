@@ -64,6 +64,86 @@ function saveSelection(selection) {
   } catch {}
 }
 
+// Whether the panel is shown; toggled by the nav item button. Open unless explicitly closed.
+const OPEN_KEY = 'chatmail:panelOpen';
+
+function loadPanelOpen() {
+  try {
+    return localStorage.getItem(OPEN_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+function savePanelOpen(open) {
+  try {
+    localStorage.setItem(OPEN_KEY, String(open));
+  } catch {}
+}
+
+// Material "left panel close" / "left panel open" icons for the nav item button; it shows
+// what a click will do.
+const panelIcon = (path) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="#444746" aria-hidden="true"><path d="${path}"/></svg>`;
+const ICON_CLOSE_PANEL = panelIcon(
+  'M660-320v-320L500-480l160 160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-80v-560H200v560h120Zm80 0h360v-560H400v560Zm-80 0H200h120Z',
+);
+const ICON_OPEN_PANEL = panelIcon(
+  'M500-640v320l160-160-160-160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-80v-560H200v560h120Zm80 0h360v-560H400v560Zm-80 0H200h120Z',
+);
+
+/**
+ * The menu button that opens/closes the panel: icon + label saying what a click will do, laid
+ * out like Gmail's own menu items (icon centered 36px from the menu's edge, label at 72px). The
+ * layout is the same in every state: in the collapsed menu the label starts past the button's
+ * edge and is clipped, so there is no collapsed/expanded switch to jump when the menu animates.
+ */
+function createNavButton(onClick) {
+  const el = document.createElement('button');
+  el.type = 'button';
+  Object.assign(el.style, {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '18px',
+    boxSizing: 'border-box',
+    width: 'calc(100% - 16px)',
+    height: '40px',
+    margin: '0 8px 8px',
+    padding: '0 0 0 16px',
+    border: '0',
+    borderRadius: '20px',
+    background: 'transparent',
+    textAlign: 'left',
+    overflow: 'hidden',
+    // Text style of Gmail's menu items.
+    userSelect: 'none',
+    lineHeight: '20px',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    textDecoration: 'none',
+    webkitFontSmoothing: 'antialiased',
+    fontFamily: '"Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif',
+    fontSize: '.875rem',
+    letterSpacing: 'normal',
+    color: 'rgb(32,33,36)',
+    textShadow: 'none',
+  });
+  const icon = document.createElement('span');
+  Object.assign(icon.style, { display: 'flex', flex: '0 0 24px' });
+  const label = document.createElement('span');
+  el.append(icon, label);
+  el.addEventListener('mouseenter', () => (el.style.background = 'rgba(60,64,67,0.12)'));
+  el.addEventListener('mouseleave', () => (el.style.background = 'transparent'));
+  el.addEventListener('click', onClick);
+  return {
+    el,
+    update(open) {
+      icon.innerHTML = open ? ICON_CLOSE_PANEL : ICON_OPEN_PANEL;
+      label.textContent = open ? 'Close Chat Mail' : 'Open Chat Mail';
+    },
+  };
+}
+
 function setWidth(panel, w) {
   panel.style.flexBasis = `${w}px`;
   panel.style.width = `${w}px`;
@@ -395,11 +475,36 @@ async function main() {
   let navEl = null;
   let listEl = null;
 
-  // A nav item gives us a stable element inside the main (left) menu.
-  sdk.NavMenu.addNavItem({ name: 'Chat Mail' }).getElement().then((el) => {
-    navEl = el;
-    mount();
-  });
+  // The nav item is the button that opens/closes the panel, and also gives us a stable element
+  // inside the main (left) menu to anchor the panel on.
+  let panelOpen = loadPanelOpen();
+  const navButton = createNavButton(() => setPanelOpen(!panelOpen));
+  navButton.update(panelOpen);
+
+  sdk.NavMenu.addNavItem({ name: 'Chat Mail' })
+    .getElement()
+    .then((el) => {
+      navEl = el;
+      // The SDK's own item markup is hidden (it keeps working unseen) and replaced by our button.
+      for (const child of navEl.children) child.style.display = 'none';
+      Object.assign(navEl.style, { height: 'auto', minHeight: '0', background: 'none' });
+      navEl.append(navButton.el);
+      mount();
+    });
+
+  function setPanelOpen(open) {
+    panelOpen = open;
+    savePanelOpen(open);
+    navButton.update(open);
+    const panel = document.getElementById(PANEL_ID);
+    if (!panel) return;
+    panel.style.display = open ? 'flex' : 'none';
+    if (open) {
+      // The margins that keep the panel clear of the collapsed menu were measured while it was hidden.
+      window.dispatchEvent(new Event('resize'));
+      loadMore();
+    }
+  }
 
   const myAddress = sdk.User.getEmailAddress().toLowerCase();
 
@@ -505,7 +610,8 @@ async function main() {
     loading = false;
     panel.spinner.hidden = true;
     const list = panel.list;
-    if (nextPageToken !== null && list.scrollHeight <= list.clientHeight + 40) loadMore();
+    // A hidden panel has no height, so it would look unfilled and load the whole inbox.
+    if (panelOpen && nextPageToken !== null && list.scrollHeight <= list.clientHeight + 40) loadMore();
   }
 
   // The SDK's query rewriter requires an `app:`/`has:` term (Gmail rejects anything else), so
@@ -663,6 +769,7 @@ async function main() {
     watchContactRow(container);
 
     const panel = createPanel();
+    if (!panelOpen) panel.style.display = 'none';
     // InboxSDK expects the menu's next sibling to be the main area, so keep that DOM order
     // and place the panel between them visually with flex `order`: the panel and everything
     // before the main area sort first (in DOM order); the main area and what follows keep order 0.
@@ -677,7 +784,7 @@ async function main() {
       if (l.scrollTop + l.clientHeight >= l.scrollHeight - 80) loadMore();
     });
     refresh();
-    loadMore();
+    if (panelOpen) loadMore();
   }
 }
 
