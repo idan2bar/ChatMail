@@ -16,7 +16,9 @@
   "host_permissions": [
     "https://mail.google.com/",
     "https://gmail.googleapis.com/",
-    "https://people.googleapis.com/"
+    "https://people.googleapis.com/",
+    "https://www.google.com/",
+    "https://*.gstatic.com/"
   ],
   "background": {
     "service_worker": "background.js"

@@ -129,11 +129,65 @@ async function photosFor(addresses) {
   return Object.fromEntries(addresses.filter((a) => index.has(a)).map((a) => [a, index.get(a)]));
 }
 
+// --- Sender logos (Google favicon service) ------------------------------------
+// Fetched here rather than with <img> tags in the page: a domain without a favicon answers 404,
+// and the page console logs every failed image load. Only the domain is sent, and only to Google.
+
+// Free-mail providers: their favicon is the provider's logo, not the contact's.
+const WEBMAIL = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com', 'yahoo.com',
+  'icloud.com', 'me.com', 'aol.com', 'proton.me', 'protonmail.com', 'gmx.com', 'gmx.net', 'mail.com',
+]);
+
+const faviconCache = new Map(); // domain -> Promise<data URL | null>
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+function faviconFor(domain) {
+  if (!faviconCache.has(domain)) {
+    const url = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+    faviconCache.set(
+      domain,
+      fetch(url, { credentials: 'omit' }).then(
+        (res) => (res.ok ? res.blob().then(blobToDataUrl) : null), // 404: no favicon
+        () => (faviconCache.delete(domain), null), // network error: try again next time
+      ),
+    );
+  }
+  return faviconCache.get(domain);
+}
+
+/** -> { address: data URL } using the sender domain's favicon, else its parent domain's (mail.acme.com -> acme.com). */
+async function faviconsFor(addresses) {
+  const entries = await Promise.all(
+    addresses.map(async (address) => {
+      const labels = address.slice(address.lastIndexOf('@') + 1).split('.');
+      if (WEBMAIL.has(labels.join('.'))) return null;
+      const domains = [labels.join('.')];
+      if (labels.length > 2) domains.push(labels.slice(1).join('.'));
+      for (const domain of domains) {
+        const icon = await faviconFor(domain);
+        if (icon) return [address, icon];
+      }
+      return null;
+    }),
+  );
+  return Object.fromEntries(entries.filter(Boolean));
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   let work;
   if (msg?.type === 'chatmail:listInbox') work = listInboxPage(msg.pageToken);
   else if (msg?.type === 'chatmail:countUnread') work = countUnreadMany(msg.addresses);
   else if (msg?.type === 'chatmail:photos') work = photosFor(msg.addresses);
+  else if (msg?.type === 'chatmail:favicons') work = faviconsFor(msg.addresses);
   else return;
   work.then(
     (data) => sendResponse({ ok: true, data }),

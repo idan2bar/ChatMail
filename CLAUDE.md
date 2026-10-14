@@ -41,7 +41,7 @@ InboxSDK needs an app id: replace `APP_ID` in `src/content.js` with one register
   stretching to fill the available height. It scrolls vertically and is resizable by dragging its right edge
   (width clamped, persisted in `localStorage`).
 - The panel lists contact cards (senders and addressees of inbox mail, own address excluded), most recent mail first.
-  Each card shows an avatar circle (the contact's Google photo when there is one, else a generic icon), the name, and the
+  Each card shows an avatar circle (the contact's Google photo, else their domain's logo, else a generic icon), the name, and the
   subject of that address's latest mail in gray.
 - Contacts are loaded from the real Gmail data via the Gmail API in lazy batches (next batch when the panel is scrolled
   near the bottom, or while the list doesn't fill the panel).
@@ -72,12 +72,14 @@ script and replies `{ ok, data | error }`. It gets a token via `chrome.identity.
 error message. It also handles `chatmail:countUnread` `{ addresses }` -> `{ address: count }`: one ids-only
 `messages.list` with `q=in:inbox is:unread (from:X OR to:X OR cc:X)` and `maxResults=100` per address; the count is exact
 up to 100 (a full page means "100 or more"), which the card badge shows as `99+`.
-
 It also handles `chatmail:photos` `{ addresses }` -> `{ address: photoUrl }`: on first use it downloads the user's saved
 contacts (`people/me/connections`) and people they've emailed (`otherContacts`) from the People API, builds an
 address -> photo index in memory (skipping Google's default placeholder photos), and answers from it. Addresses are matched
 locally, never sent anywhere; the photo URLs are `googleusercontent.com` images loaded directly by the content script.
-No third-party avatar service is used on purpose (nothing about contacts may leave Google).
+Addresses without a photo fall back to their domain's favicon: `chatmail:favicons` `{ addresses }` -> `{ address: dataUrl }`
+fetches `https://www.google.com/s2/favicons?domain=…` in the background script (then the parent domain; free-mail domains are
+skipped; results cached per domain) and returns data URLs, so failed lookups don't log 404s in the Gmail console. Only domains
+are sent, and only to Google. No non-Google avatar service is used on purpose (nothing about contacts may leave Google).
 
 **Gmail API / auth constraints** – uses the restricted scope `gmail.readonly` (needed for the `q` search parameter, which
 `gmail.metadata` forbids; it also allows reading bodies, but the code only reads headers and ids). `q` is used only for

@@ -318,10 +318,27 @@ const USER_ICON =
 let selectedAddress = null;
 
 // One avatar element per address, reused by every re-render: a rebuilt avatar would show the generic
-// icon again until its photo reloaded, which flickers on each selection change.
+// icon again until its image reloaded, which flickers on each selection change.
 const avatars = new Map();
 
-function getAvatar(address, photo) {
+/** Shows the first of `candidates` ({ url, logo }) that loads; the generic icon stays if none does. */
+function loadAvatarImage(avatar, [candidate, ...rest]) {
+  if (!candidate) return;
+  const img = document.createElement('img');
+  img.referrerPolicy = 'no-referrer';
+  // A photo fills the circle; a logo sits inside it on white.
+  Object.assign(img.style, { width: '100%', height: '100%', boxSizing: 'border-box' });
+  if (candidate.logo) Object.assign(img.style, { objectFit: 'contain', padding: '6px' });
+  else img.style.objectFit = 'cover';
+  img.addEventListener('load', () => {
+    avatar.style.background = candidate.logo ? '#fff' : '#9aa0a6';
+    avatar.replaceChildren(img);
+  });
+  img.addEventListener('error', () => loadAvatarImage(avatar, rest));
+  img.src = candidate.url;
+}
+
+function getAvatar(address, candidates) {
   let avatar = avatars.get(address);
   if (!avatar) {
     avatar = document.createElement('div');
@@ -339,19 +356,15 @@ function getAvatar(address, photo) {
     avatar.innerHTML = USER_ICON;
     avatars.set(address, avatar);
   }
-  if (photo && avatar.dataset.photo !== photo) {
-    // The icon stays until the image has loaded, and for good if it fails.
-    avatar.dataset.photo = photo;
-    const img = document.createElement('img');
-    img.src = photo;
-    img.referrerPolicy = 'no-referrer';
-    Object.assign(img.style, { width: '100%', height: '100%', objectFit: 'cover' });
-    img.addEventListener('load', () => avatar.replaceChildren(img));
+  const key = candidates.map((c) => c.url).join(' ');
+  if (key && avatar.dataset.images !== key) {
+    avatar.dataset.images = key;
+    loadAvatarImage(avatar, candidates);
   }
   return avatar;
 }
 
-function createCard({ address, name, subject, unread, photo }) {
+function createCard({ address, name, subject, unread, images }) {
   const card = document.createElement('div');
   card.dataset.address = address;
   card.setAttribute('role', 'option');
@@ -369,7 +382,7 @@ function createCard({ address, name, subject, unread, photo }) {
     background: selected ? 'rgba(26,115,232,0.16)' : 'transparent',
   });
 
-  const avatar = getAvatar(address, photo);
+  const avatar = getAvatar(address, images);
 
   const text = document.createElement('div');
   Object.assign(text.style, { minWidth: 0, flex: '1 1 auto' });
@@ -540,7 +553,7 @@ async function main() {
       [...contacts.values()].map((c) => ({
         ...c,
         unread: unreadCounts.get(c.address) || 0,
-        photo: photoUrls.get(c.address),
+        images: avatarImages(c.address),
       })),
     );
   }
@@ -567,10 +580,18 @@ async function main() {
     }
   }
 
-  // Address -> photo URL from the user's Google contacts. Cards show the generic icon until the
-  // image has loaded, and keep it for addresses without a photo.
+  // Address -> avatar image: the photo from the user's Google contacts, else the sender domain's
+  // logo (a data URL the background script fetched). Cards show the generic icon until the image
+  // has loaded, and keep it for addresses with neither.
   const photoUrls = new Map();
+  const logoUrls = new Map();
   const photoRequested = new Set();
+
+  function avatarImages(address) {
+    if (photoUrls.has(address)) return [{ url: photoUrls.get(address) }];
+    if (logoUrls.has(address)) return [{ url: logoUrls.get(address), logo: true }];
+    return [];
+  }
 
   async function loadPhotos() {
     const addresses = [...contacts.keys()].filter((a) => !photoRequested.has(a));
@@ -579,6 +600,10 @@ async function main() {
     try {
       const photos = await askBackground({ type: 'chatmail:photos', addresses });
       for (const [address, url] of Object.entries(photos)) photoUrls.set(address, url);
+      // Showing a logo first and then the photo would flicker, so logos wait for the photo lookup.
+      const rest = addresses.filter((a) => !photoUrls.has(a));
+      const logos = rest.length ? await askBackground({ type: 'chatmail:favicons', addresses: rest }) : {};
+      for (const [address, url] of Object.entries(logos)) logoUrls.set(address, url);
       refresh();
     } catch (err) {
       console.error('[ChatMail]', err);
