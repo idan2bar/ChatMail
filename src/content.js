@@ -546,6 +546,9 @@ async function main() {
   const contacts = new Map();
   let nextPageToken = undefined; // undefined: nothing loaded yet, null: no more pages
   let loading = false;
+  // The last load failed: scrolling retries only after the list was scrolled away from the bottom, since
+  // the error line itself changes the list's height and would otherwise retry in a loop.
+  let loadFailed = false;
 
   // Every background request is scoped to the account shown in this tab.
   const askBackground = (message) =>
@@ -649,6 +652,7 @@ async function main() {
     } catch (err) {
       console.error('[ChatMail]', err);
       showStatus(panel, `Couldn't load contacts: ${err.message}`);
+      loadFailed = true;
       loading = false;
       panel.spinner.hidden = true;
       return;
@@ -662,7 +666,7 @@ async function main() {
 
   // The SDK's query rewriter requires an `app:`/`has:` term (Gmail rejects anything else), so
   // it can't show a plain name. Instead, the real query runs as-is and the search box text is
-  // reset to the contact's display name right after — the SDK has no API for the search box, so
+  // reset to the contact's display name right after â€” the SDK has no API for the search box, so
   // this is a raw DOM fallback on the search input's stable `name="q"`. Gmail fills the box back
   // in after navigating, so it's set again shortly after too.
   function setSearchBoxText(text) {
@@ -677,7 +681,7 @@ async function main() {
   const queryFor = (address) => `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
 
   // The query for the currently selected contact, so a route change can be recognized as "ours"
-  // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
+  // (a card selecting/deselecting itself) by content rather than by a flag â€” the same check also
   // recognizes the page's own reload landing back on that search, so restoring the saved selection
   // below doesn't immediately get read as a real search and cleared.
   let expectedQuery = null;
@@ -867,7 +871,8 @@ async function main() {
     setupSelection(panel, refresh, onSelect);
     panel.list.addEventListener('scroll', () => {
       const l = panel.list;
-      if (l.scrollTop + l.clientHeight >= l.scrollHeight - 80) loadMore();
+      if (l.scrollTop + l.clientHeight < l.scrollHeight - 80) loadFailed = false;
+      else if (!loadFailed) loadMore();
     });
     refresh();
     if (panelOpen) loadMore();
