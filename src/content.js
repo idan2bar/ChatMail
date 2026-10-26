@@ -323,6 +323,7 @@ let selectedAddress = null;
 // One avatar element per address, reused by every re-render: a rebuilt avatar would show the generic
 // icon again until its image reloaded, which flickers on each selection change.
 const avatars = new Map();
+const cards = new Map(); // address -> { key, card }, see renderContacts
 
 /** Shows the first of `candidates` ({ url, logo }) that loads; the generic icon stays if none does. */
 function loadAvatarImage(avatar, [candidate, ...rest]) {
@@ -434,8 +435,24 @@ function createCard({ address, name, subject, unread, latestUnread, images }) {
  * with a `chatmail:contactselect` event on the panel for later filtering.
  */
 function renderContacts(panel, contacts) {
-  panel.list.replaceChildren(...contacts.map(createCard), panel.spinner);
-  panel.list.setAttribute('role', 'listbox');
+  const { list } = panel;
+  // Cards whose data didn't change are kept as they are: rebuilding all of them on every update
+  // (counts, photos and polls arrive constantly) makes a long list flicker.
+  const wanted = contacts.map((c) => {
+    const key = JSON.stringify([c.name, c.subject, c.unread, c.latestUnread, c.images, c.address === selectedAddress]);
+    let entry = cards.get(c.address);
+    if (!entry || entry.key !== key) {
+      entry = { key, card: createCard(c) };
+      cards.set(c.address, entry);
+    }
+    return entry.card;
+  });
+  wanted.push(panel.spinner);
+  wanted.forEach((node, i) => {
+    if (list.children[i] !== node) list.insertBefore(node, list.children[i] || null);
+  });
+  while (list.children.length > wanted.length) list.lastElementChild.remove();
+  list.setAttribute('role', 'listbox');
 }
 
 /** Parses an address header ("Name <a@b.c>, d@e.f") into [{ address, name }]. */
