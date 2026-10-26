@@ -282,6 +282,8 @@ function createPanel() {
   hideBar.textContent =
     `#${PANEL_ID} > div::-webkit-scrollbar { display: none; }` +
     '@keyframes chatmail-spin { to { transform: rotate(360deg); } }' +
+    // Styled here rather than inline, since an inline `display` would override the `hidden` attribute.
+    `#${PANEL_ID} > div > [role="status"]:not([hidden]) { display: flex; justify-content: center; padding: 20px 0; }` +
     // With no cards yet the spinner is the list's only child: center it in the whole panel.
     `#${PANEL_ID} > div > [role="status"]:only-child { position: absolute; inset: 0; align-items: center; padding: 0; pointer-events: none; }`;
   panel.append(hideBar);
@@ -292,7 +294,6 @@ function createPanel() {
   spinner.hidden = true;
   spinner.setAttribute('role', 'status');
   spinner.setAttribute('aria-label', 'Loading more contacts');
-  Object.assign(spinner.style, { display: 'flex', justifyContent: 'center', padding: '20px 0' });
   const ring = document.createElement('div');
   Object.assign(ring.style, {
     width: '28px',
@@ -644,7 +645,7 @@ async function main() {
 
   // The SDK's query rewriter requires an `app:`/`has:` term (Gmail rejects anything else), so
   // it can't show a plain name. Instead, the real query runs as-is and the search box text is
-  // reset to the contact's display name right after â€” the SDK has no API for the search box, so
+  // reset to the contact's display name right after — the SDK has no API for the search box, so
   // this is a raw DOM fallback on the search input's stable `name="q"`. Gmail fills the box back
   // in after navigating, so it's set again shortly after too.
   function setSearchBoxText(text) {
@@ -659,7 +660,7 @@ async function main() {
   const queryFor = (address) => `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
 
   // The query for the currently selected contact, so a route change can be recognized as "ours"
-  // (a card selecting/deselecting itself) by content rather than by a flag â€” the same check also
+  // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
   // recognizes the page's own reload landing back on that search, so restoring the saved selection
   // below doesn't immediately get read as a real search and cleared.
   let expectedQuery = null;
