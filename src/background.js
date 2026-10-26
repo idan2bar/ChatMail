@@ -4,17 +4,84 @@ import '@inboxsdk/core/background.js';
 // --- Google API access --------------------------------------------------------
 // The content script can't use chrome.identity, so it asks us for inbox pages (and contact photos).
 
-const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
+// A "Web application" OAuth client in the same Cloud project, with the authorized redirect URI
+// `https://<extension-id>.chromiumapp.org/` (= chrome.identity.getRedirectURL()).
+const OAUTH_CLIENT_ID = '165687420796-9d9suuoc08jllbv17idmsicrrdmbeacd.apps.googleusercontent.com';
+const SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/contacts.readonly',
+  'https://www.googleapis.com/auth/contacts.other.readonly',
+];
 const HEADERS = ['From', 'To', 'Cc', 'Subject', 'Date'];
 
-const getToken = (interactive) => chrome.identity.getAuthToken({ interactive }).then((r) => r.token);
+// Every token and request is bound to the Gmail account of the tab that asked (`account`), never to
+// the Chrome profile's default Google account.
+const gmailBase = (account) => `https://gmail.googleapis.com/gmail/v1/users/${encodeURIComponent(account)}`;
 
-async function googleGet(url) {
+const tokenKey = (account) => `chatmail:token:${account}`;
+const tokenRequests = new Map(); // account -> in-flight Promise<token>, so one auth flow per account
+
+/** Runs the OAuth implicit flow for `account` -> { token, expiresAt }. Silent unless `interactive`. */
+async function runAuthFlow(account, interactive) {
+  const params = new URLSearchParams({
+    client_id: OAUTH_CLIENT_ID,
+    response_type: 'token',
+    redirect_uri: chrome.identity.getRedirectURL(),
+    scope: SCOPES.join(' '),
+    login_hint: account,
+  });
+  if (!interactive) params.set('prompt', 'none');
+  const redirect = await chrome.identity.launchWebAuthFlow({
+    url: `https://accounts.google.com/o/oauth2/v2/auth?${params}`,
+    interactive,
+  });
+  if (!redirect) throw new Error('Google sign-in returned no result');
+  const result = new URLSearchParams(new URL(redirect).hash.slice(1));
+  const token = result.get('access_token');
+  if (!token) throw new Error(`Google sign-in failed: ${result.get('error') || 'no access token'}`);
+  return { token, expiresAt: Date.now() + Number(result.get('expires_in') || 0) * 1000 };
+}
+
+/** Throws unless `token` belongs to `account`. */
+async function verifyToken(account, token) {
+  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile?fields=emailAddress', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const email = res.ok ? (await res.json()).emailAddress : undefined;
+  if (email?.toLowerCase() !== account) {
+    throw new Error(`The signed-in Google account${email ? ` (${email})` : ''} does not match this Gmail tab (${account})`);
+  }
+}
+
+async function fetchToken(account) {
+  let auth;
+  try {
+    auth = await runAuthFlow(account, false);
+  } catch {
+    auth = await runAuthFlow(account, true); // needs the user (sign-in or first consent)
+  }
+  await verifyToken(account, auth.token); // never cache an unverified token
+  await chrome.storage.session.set({ [tokenKey(account)]: auth });
+  return auth.token;
+}
+
+async function getToken(account) {
+  const key = tokenKey(account);
+  const cached = (await chrome.storage.session.get(key))[key];
+  if (cached && cached.expiresAt - 60_000 > Date.now()) return cached.token;
+  if (!tokenRequests.has(account)) {
+    const request = fetchToken(account).finally(() => tokenRequests.delete(account));
+    tokenRequests.set(account, request);
+  }
+  return tokenRequests.get(account);
+}
+
+async function googleGet(account, url) {
   for (let attempt = 0; attempt < 2; attempt++) {
-    const token = await getToken(true);
+    const token = await getToken(account);
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (res.status === 401 && attempt === 0) {
-      await chrome.identity.removeCachedAuthToken({ token }); // stale token: refresh once
+      await chrome.storage.session.remove(tokenKey(account)); // stale token: refresh once
       continue;
     }
     if (!res.ok) {
@@ -29,19 +96,19 @@ async function googleGet(url) {
   }
 }
 
-const gmailGet = (path, params) => googleGet(`${API}/${path}?${params}`);
+const gmailGet = (account, path, params) => googleGet(account, `${gmailBase(account)}/${path}?${params}`);
 
 /** One page of inbox messages (newest first) with just the headers we display. */
-async function listInboxPage(pageToken) {
+async function listInboxPage(account, pageToken) {
   const list = new URLSearchParams({ labelIds: 'INBOX', maxResults: '25' });
   if (pageToken) list.set('pageToken', pageToken);
-  const { messages = [], nextPageToken = null } = await gmailGet('messages', list);
+  const { messages = [], nextPageToken = null } = await gmailGet(account, 'messages', list);
 
   const details = await Promise.all(
     messages.map((m) => {
       const p = new URLSearchParams({ format: 'metadata' });
       for (const h of HEADERS) p.append('metadataHeaders', h);
-      return gmailGet(`messages/${m.id}`, p);
+      return gmailGet(account, `messages/${m.id}`, p);
     }),
   );
   const header = (msg, name) =>
@@ -65,16 +132,16 @@ const UNREAD_CAP = 100; // list at most this many ids; the UI shows 99+ beyond 9
  * Exact unread inbox count for one address, capped at UNREAD_CAP. A single ids-only
  * list request: a full page of ids means "cap or more".
  */
-async function countUnread(address) {
+async function countUnread(account, address) {
   const q = `in:inbox is:unread (from:${address} OR to:${address} OR cc:${address})`;
   const params = new URLSearchParams({ q, maxResults: String(UNREAD_CAP), fields: 'messages/id' });
-  const { messages = [] } = await gmailGet('messages', params);
+  const { messages = [] } = await gmailGet(account, 'messages', params);
   return messages.length;
 }
 
 /** Counts for several addresses -> { address: count }. */
-async function countUnreadMany(addresses) {
-  const counts = await Promise.all(addresses.map(countUnread));
+async function countUnreadMany(account, addresses) {
+  const counts = await Promise.all(addresses.map((a) => countUnread(account, a)));
   return Object.fromEntries(addresses.map((a, i) => [a, counts[i]]));
 }
 
@@ -84,9 +151,9 @@ async function countUnreadMany(addresses) {
  * Without a `historyId` it only returns the current one, as the starting point. One cheap call,
  * so it can be polled often, and it reports changes whichever way they were made in Gmail.
  */
-async function unreadChanges(startHistoryId) {
+async function unreadChanges(account, startHistoryId) {
   if (!startHistoryId) {
-    const { historyId } = await gmailGet('profile', new URLSearchParams({ fields: 'historyId' }));
+    const { historyId } = await gmailGet(account, 'profile', new URLSearchParams({ fields: 'historyId' }));
     return { historyId, changes: [] };
   }
   const events = [];
@@ -99,9 +166,9 @@ async function unreadChanges(startHistoryId) {
     if (pageToken) params.set('pageToken', pageToken);
     let page;
     try {
-      page = await gmailGet('history', params);
+      page = await gmailGet(account, 'history', params);
     } catch (err) {
-      if (String(err.message).startsWith('Google API 404')) return unreadChanges(); // history too old: restart
+      if (String(err.message).startsWith('Google API 404')) return unreadChanges(account); // history too old: restart
       throw err;
     }
     historyId = page.historyId || historyId;
@@ -123,7 +190,7 @@ async function unreadChanges(startHistoryId) {
     events.map(async ({ id, delta }) => {
       const p = new URLSearchParams({ format: 'metadata' });
       for (const h of ['From', 'To', 'Cc']) p.append('metadataHeaders', h);
-      const msg = await gmailGet(`messages/${id}`, p);
+      const msg = await gmailGet(account, `messages/${id}`, p);
       return { id, delta, from: header(msg, 'From'), to: header(msg, 'To'), cc: header(msg, 'Cc') };
     }),
   );
@@ -138,7 +205,7 @@ async function unreadChanges(startHistoryId) {
 const PEOPLE = 'https://people.googleapis.com/v1';
 
 /** Every person of one People API list as { emailAddresses, photos }, following the pages. */
-async function listPeople(path, listKey, maskParam) {
+async function listPeople(account, path, listKey, maskParam) {
   const people = [];
   let pageToken;
   do {
@@ -148,19 +215,20 @@ async function listPeople(path, listKey, maskParam) {
       fields: `nextPageToken,${listKey}(emailAddresses/value,photos(url,default))`,
     });
     if (pageToken) params.set('pageToken', pageToken);
-    const page = await googleGet(`${PEOPLE}/${path}?${params}`);
+    const page = await googleGet(account, `${PEOPLE}/${path}?${params}`);
     people.push(...(page[listKey] || []));
     pageToken = page.nextPageToken;
   } while (pageToken);
   return people;
 }
 
-let photoIndex; // Promise<Map<address, photo url>>, built on first use
+const photoIndexes = new Map(); // account -> Promise<Map<address, photo url>>, built on first use
 
-function loadPhotoIndex() {
-  photoIndex ??= Promise.all([
-    listPeople('people/me/connections', 'connections', 'personFields'), // first: saved contacts win
-    listPeople('otherContacts', 'otherContacts', 'readMask'),
+function loadPhotoIndex(account) {
+  if (photoIndexes.has(account)) return photoIndexes.get(account);
+  const photoIndex = Promise.all([
+    listPeople(account, 'people/me/connections', 'connections', 'personFields'), // first: saved contacts win
+    listPeople(account, 'otherContacts', 'otherContacts', 'readMask'),
   ]).then((lists) => {
     const index = new Map();
     for (const person of lists.flat()) {
@@ -173,13 +241,14 @@ function loadPhotoIndex() {
     }
     return index;
   });
-  photoIndex.catch(() => (photoIndex = undefined)); // retry on the next request
+  photoIndexes.set(account, photoIndex);
+  photoIndex.catch(() => photoIndexes.delete(account)); // retry on the next request
   return photoIndex;
 }
 
 /** -> { address: photo url } for the addresses that have a photo. */
-async function photosFor(addresses) {
-  const index = await loadPhotoIndex();
+async function photosFor(account, addresses) {
+  const index = await loadPhotoIndex(account);
   return Object.fromEntries(addresses.filter((a) => index.has(a)).map((a) => [a, index.get(a)]));
 }
 
@@ -236,13 +305,17 @@ async function faviconsFor(addresses) {
   return Object.fromEntries(entries.filter(Boolean));
 }
 
+// Every message carries `account`: the Gmail address (lowercased) of the tab that sent it.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (!String(msg?.type).startsWith('chatmail:')) return;
+  const { account } = msg;
   let work;
-  if (msg?.type === 'chatmail:listInbox') work = listInboxPage(msg.pageToken);
-  else if (msg?.type === 'chatmail:countUnread') work = countUnreadMany(msg.addresses);
-  else if (msg?.type === 'chatmail:unreadChanges') work = unreadChanges(msg.historyId);
-  else if (msg?.type === 'chatmail:photos') work = photosFor(msg.addresses);
-  else if (msg?.type === 'chatmail:favicons') work = faviconsFor(msg.addresses);
+  if (typeof account !== 'string' || !account) work = Promise.reject(new Error('Missing Gmail account in message'));
+  else if (msg.type === 'chatmail:listInbox') work = listInboxPage(account, msg.pageToken);
+  else if (msg.type === 'chatmail:countUnread') work = countUnreadMany(account, msg.addresses);
+  else if (msg.type === 'chatmail:unreadChanges') work = unreadChanges(account, msg.historyId);
+  else if (msg.type === 'chatmail:photos') work = photosFor(account, msg.addresses);
+  else if (msg.type === 'chatmail:favicons') work = faviconsFor(msg.addresses);
   else return;
   work.then(
     (data) => sendResponse({ ok: true, data }),

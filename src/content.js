@@ -46,21 +46,23 @@ function saveWidth(w) {
 
 // Persists the selected contact per tab, so reloading the Gmail tab keeps the card selected and
 // its search showing instead of landing back on a deselected page. sessionStorage (not
-// localStorage) keeps this from leaking into other tabs/windows.
+// localStorage) keeps this from leaking into other tabs/windows. The key includes the account, so a
+// selection made in one Gmail account (/u/0, /u/1, ...) never shows up in another one in the same tab.
 const SELECTION_KEY = 'chatmail:selectedContact';
 
-function loadSelection() {
+function loadSelection(account) {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(SELECTION_KEY));
+    const saved = JSON.parse(sessionStorage.getItem(`${SELECTION_KEY}:${account}`));
     if (saved && typeof saved.address === 'string' && typeof saved.name === 'string') return saved;
   } catch {}
   return null;
 }
 
-function saveSelection(selection) {
+function saveSelection(account, selection) {
   try {
-    if (selection) sessionStorage.setItem(SELECTION_KEY, JSON.stringify(selection));
-    else sessionStorage.removeItem(SELECTION_KEY);
+    const key = `${SELECTION_KEY}:${account}`;
+    if (selection) sessionStorage.setItem(key, JSON.stringify(selection));
+    else sessionStorage.removeItem(key);
   } catch {}
 }
 
@@ -527,9 +529,10 @@ async function main() {
   let nextPageToken = undefined; // undefined: nothing loaded yet, null: no more pages
   let loading = false;
 
+  // Every background request is scoped to the account shown in this tab.
   const askBackground = (message) =>
     new Promise((resolve, reject) =>
-      chrome.runtime.sendMessage(message, (res) => {
+      chrome.runtime.sendMessage({ ...message, account: myAddress }, (res) => {
         if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
         else if (!res?.ok) reject(new Error(res?.error || 'No response'));
         else resolve(res.data);
@@ -664,7 +667,7 @@ async function main() {
 
   // Restore the contact selected before a reload, so the panel and the search box right away
   // reflect the page Gmail already re-rendered, instead of flashing deselected.
-  const saved = loadSelection();
+  const saved = loadSelection(myAddress);
   if (saved) {
     selectedAddress = saved.address;
     expectedQuery = queryFor(saved.address);
@@ -684,7 +687,7 @@ async function main() {
     if (selectedAddress) {
       selectedAddress = null;
       expectedQuery = null;
-      saveSelection(null);
+      saveSelection(myAddress, null);
       refresh();
     }
   });
@@ -695,12 +698,12 @@ async function main() {
       const name = contacts.get(address).name || address;
       expectedQuery = queryFor(address);
       selectedName = name;
-      saveSelection({ address, name });
+      saveSelection(myAddress, { address, name });
       sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query: expectedQuery, page: '1' });
       setSearchBoxText(name);
     } else {
       expectedQuery = null;
-      saveSelection(null);
+      saveSelection(myAddress, null);
       sdk.Router.goto(sdk.Router.NativeRouteIDs.INBOX);
     }
   }
