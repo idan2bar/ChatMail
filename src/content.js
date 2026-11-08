@@ -718,17 +718,22 @@ async function main() {
   }
 
   // The SDK's query rewriter requires an `app:`/`has:` term (Gmail rejects anything else), so
-  // it can't show a plain name. Instead, the real query runs as-is and the search box text is
-  // reset to the contact's display name right after — the SDK has no API for the search box, so
-  // this is a raw DOM fallback on the search input's stable `name="q"`. Gmail fills the box back
-  // in after navigating, so it's set again shortly after too.
-  function setSearchBoxText(text) {
-    const set = () => {
+  // it can't show a plain name. Instead, the real query runs as-is and, once Gmail fills the
+  // search box with it, the text is replaced by the contact's display name. Gmail appends a
+  // trailing space, so values are compared trimmed. Only a box holding exactly `query` is
+  // touched, so text the user types is never overwritten. Gmail may fill the
+  // box late, so every frame is checked for a short window. The SDK has no API for the search
+  // box, so this is a raw DOM fallback on the search input's stable `name="q"`.
+  let searchBoxFrame = 0;
+  function setSearchBoxText(query, text) {
+    cancelAnimationFrame(searchBoxFrame);
+    const end = performance.now() + 2000;
+    const tick = () => {
       const input = document.querySelector('input[name="q"]');
-      if (input && input.value !== text) input.value = text;
+      if (input && input.value.trim() === query.trim()) input.value = text;
+      if (performance.now() < end) searchBoxFrame = requestAnimationFrame(tick);
     };
-    set();
-    [100, 400, 1000].forEach((ms) => setTimeout(set, ms));
+    tick();
   }
 
   // Keep in sync with the unread-count query in background.js.
@@ -748,7 +753,7 @@ async function main() {
     selectedAddress = saved.address;
     expectedQuery = queryFor(saved.address);
     selectedName = saved.name;
-    setSearchBoxText(selectedName);
+    setSearchBoxText(expectedQuery, selectedName);
   }
 
   sdk.Router.handleAllRoutes((routeView) => {
@@ -758,7 +763,7 @@ async function main() {
     const isOurSearch = routeID === sdk.Router.NativeRouteIDs.SEARCH && routeView.getParams().query === expectedQuery;
     if (isOurSearch || routeID === sdk.Router.NativeRouteIDs.THREAD) {
       // Gmail refills the search box with the raw query on every navigation within the selection.
-      if (selectedAddress) setSearchBoxText(selectedName);
+      if (selectedAddress) setSearchBoxText(expectedQuery, selectedName);
       return;
     }
     if (selectedAddress) {
@@ -777,7 +782,7 @@ async function main() {
       selectedName = name;
       saveSelection(myAddress, { address, name });
       sdk.Router.goto(sdk.Router.NativeRouteIDs.SEARCH, { query: expectedQuery, page: '1' });
-      setSearchBoxText(name);
+      setSearchBoxText(expectedQuery, name);
     } else {
       expectedQuery = null;
       saveSelection(myAddress, null);
