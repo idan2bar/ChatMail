@@ -198,9 +198,9 @@ function createResizeHandle(panel) {
  * Makes the panel end at the same bottom edge as Gmail's white card, whatever gap Gmail
  * leaves below it inside the shared row. The card is the main area's content, so the gap is
  * the row's bottom minus the lowest bottom of the main area's children (the main area itself
- * if it has none).
+ * if it has none). Everything it sets up is torn down when `signal` aborts.
  */
-function alignBottom(panel, container, mainArea) {
+function alignBottom(panel, container, mainArea, signal) {
   const sync = () => {
     const bottom = container.getBoundingClientRect().bottom;
     const kids = [...mainArea.children];
@@ -212,8 +212,19 @@ function alignBottom(panel, container, mainArea) {
   const ro = new ResizeObserver(sync);
   ro.observe(container);
   ro.observe(mainArea);
-  [...mainArea.children].forEach((k) => ro.observe(k));
-  window.addEventListener('resize', sync);
+  const observeKids = () => [...mainArea.children].forEach((k) => ro.observe(k)); // re-observing is harmless
+  observeKids();
+  // Gmail swaps the main area's children (e.g. when switching views); follow the current ones.
+  const mo = new MutationObserver(() => {
+    observeKids();
+    sync();
+  });
+  mo.observe(mainArea, { childList: true });
+  window.addEventListener('resize', sync, { signal });
+  signal.addEventListener('abort', () => {
+    ro.disconnect();
+    mo.disconnect();
+  });
   sync();
 }
 
@@ -222,9 +233,9 @@ function alignBottom(panel, container, mainArea) {
  * empty space between the panel and the main area, leaving the panel under the menu icons.
  * Move that space to the panel's left: measure the gap the panel's natural position leaves
  * before the main area, then shift the panel right by it and shrink its right margin by the
- * same amount so the main area doesn't move.
+ * same amount so the main area doesn't move. Everything it sets up is torn down when `signal` aborts.
  */
-function shiftClearOfMenu(panel, container, mainArea) {
+function shiftClearOfMenu(panel, container, mainArea, signal) {
   const GAP = 8; // the panel's normal right margin
   const sync = () => {
     panel.style.marginLeft = '0px';
@@ -237,8 +248,9 @@ function shiftClearOfMenu(panel, container, mainArea) {
   const ro = new ResizeObserver(sync);
   ro.observe(container);
   ro.observe(mainArea);
-  container.addEventListener('transitionend', sync);
-  window.addEventListener('resize', sync);
+  container.addEventListener('transitionend', sync, { signal });
+  window.addEventListener('resize', sync, { signal });
+  signal.addEventListener('abort', () => ro.disconnect());
   sync();
 }
 
@@ -517,7 +529,8 @@ function showLoadError(panel, message, onRetry) {
   row.hidden = !message;
 }
 
-function setupSelection(panel, rerender, onSelect) {
+/** Click/keyboard selection of cards; the listeners are removed when `signal` aborts. */
+function setupSelection(panel, rerender, onSelect, signal) {
   const toggle = (card) => {
     const address = card.dataset.address;
     selectedAddress = selectedAddress === address ? null : address;
@@ -528,14 +541,14 @@ function setupSelection(panel, rerender, onSelect) {
   panel.addEventListener('click', (e) => {
     const card = e.target.closest('[data-address]');
     if (card) toggle(card);
-  });
+  }, { signal });
   panel.addEventListener('keydown', (e) => {
     const card = e.target.closest?.('[data-address]');
     if (card && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
       toggle(card);
     }
-  });
+  }, { signal });
 }
 
 async function main() {
@@ -544,6 +557,11 @@ async function main() {
   // This element is handed to us by the SDK, so the panel position is
   // derived from it instead of from Gmail's internal class names or ids.
   let navEl = null;
+
+  // The current mount: { controller, panel, container, mainArea }. Aborting its controller undoes
+  // everything the mount added (panel, style, observers, listeners). Declared up here so it exists
+  // before any SDK callback can call mount().
+  let mounted = null;
 
   // The nav item is the button that opens/closes the panel, and also gives us a stable element
   // inside the main (left) menu to anchor the panel on.
@@ -734,6 +752,7 @@ async function main() {
   }
 
   sdk.Router.handleAllRoutes((routeView) => {
+    mount(); // cheap re-check: restores the panel if Gmail rebuilt its layout
     const routeID = routeView.getRouteID();
     // Opening a mail from the results is a THREAD route (no query param), still within the selection.
     const isOurSearch = routeID === sdk.Router.NativeRouteIDs.SEARCH && routeView.getParams().query === expectedQuery;
@@ -774,7 +793,8 @@ async function main() {
   // shows before the mail list's table exists, so the card's "no table" widening runs up into the
   // element about to hold the list) is corrected as soon as the table appears, and deselecting
   // simply clears the markers.
-  function watchContactRow(root) {
+  // The style element and the observer are removed when `signal` aborts.
+  function watchContactRow(root, signal) {
     const HIDDEN = 'data-chatmail-hidden';
     const FILTERS = 'data-chatmail-filters';
     const style = document.createElement('style');
@@ -783,6 +803,7 @@ async function main() {
       `[${FILTERS}] { box-sizing: border-box !important; height: 44px !important; min-height: 44px !important;` +
       ' padding-top: 12px !important; padding-bottom: 8px !important; }';
     document.head.append(style);
+    signal.addEventListener('abort', () => style.remove());
 
     // Puts `attr` on exactly the elements in `els`.
     const mark = (attr, els) => {
@@ -826,12 +847,18 @@ async function main() {
     };
     // Text and the chips' `data-query` can be filled in after the nodes exist (e.g. when returning
     // from a mail), so those changes are watched too; the markers themselves don't trigger it.
-    new MutationObserver(run).observe(root, {
+    const mo = new MutationObserver(run);
+    mo.observe(root, {
       childList: true,
       subtree: true,
       characterData: true,
       attributes: true,
       attributeFilter: ['data-query'],
+    });
+    signal.addEventListener('abort', () => {
+      mo.disconnect();
+      // The markers live on Gmail's elements, which outlive this mount; clear them.
+      for (const attr of [HIDDEN, FILTERS]) for (const el of root.querySelectorAll(`[${attr}]`)) el.removeAttribute(attr);
     });
     run();
   }
@@ -875,9 +902,10 @@ async function main() {
   const pollTimer = setInterval(pollUnreadChanges, POLL_MS);
   document.addEventListener('visibilitychange', pollUnreadChanges); // catch up right away on returning
 
+  // Idempotent: called on load and on every navigation, it only does work when there is no panel in
+  // the current layout (first time, or Gmail rebuilt that part of the page).
   function mount() {
     if (!navEl || !navEl.isConnected) return;
-    if (document.getElementById(PANEL_ID)) return;
 
     // Everything is derived from the nav item, so mounting doesn't depend on the current
     // page having mail-list rows (empty folders, open emails, empty searches).
@@ -885,9 +913,19 @@ async function main() {
     if (!layout) return;
     const { container, mainArea } = layout;
 
-    watchContactRow(container);
+    if (mounted && mounted.panel.isConnected && mounted.container === container && mounted.mainArea === mainArea) return;
+    mounted?.controller.abort();
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    watchContactRow(container, signal);
 
     const panel = createPanel();
+    mounted = { controller, panel, container, mainArea };
+    signal.addEventListener('abort', () => {
+      panel.remove();
+      for (let n = mainArea.previousElementSibling; n; n = n.previousElementSibling) n.style.order = '';
+    });
     if (!panelOpen) panel.style.display = 'none';
     // InboxSDK expects the menu's next sibling to be the main area, so keep that DOM order
     // and place the panel between them visually with flex `order`: the panel and everything
@@ -895,13 +933,13 @@ async function main() {
     panel.style.order = '-1';
     for (let n = mainArea.previousElementSibling; n; n = n.previousElementSibling) n.style.order = '-1';
     mainArea.after(panel);
-    shiftClearOfMenu(panel, container, mainArea);
-    alignBottom(panel, container, mainArea);
-    setupSelection(panel, refresh, onSelect);
+    shiftClearOfMenu(panel, container, mainArea, signal);
+    alignBottom(panel, container, mainArea, signal);
+    setupSelection(panel, refresh, onSelect, signal);
     panel.list.addEventListener('scroll', () => {
       const l = panel.list;
       if (!loadError && l.scrollTop + l.clientHeight >= l.scrollHeight - 80) loadMore();
-    });
+    }, { signal });
     refresh();
     if (panelOpen) loadMore();
   }
