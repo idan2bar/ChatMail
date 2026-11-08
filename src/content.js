@@ -853,7 +853,6 @@ async function main() {
     try {
       const res = await askBackground({ type: 'chatmail:unreadChanges', historyId });
       historyId = res.historyId;
-      if (res.changes.length) console.log('[ChatMail] unread changes', res.changes, [...unreadCounts]); // TEMP debug
       for (const { id, delta, from, to, cc } of res.changes) {
         for (const { address } of mailOwners(myAddress, { from, to, cc })) {
           const contact = contacts.get(address);
