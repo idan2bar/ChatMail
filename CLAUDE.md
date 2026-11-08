@@ -69,7 +69,7 @@ InboxSDK needs an app id: replace `APP_ID` in `src/content.js` with one register
 
 **Content script (`src/content.js`)** – top-level helpers plus `main()`:
 - Pure/DOM helpers: panel creation (`createPanel`, `createResizeHandle`, `alignBottom`, `shiftClearOfMenu`), cards
-  (`createCard`, `renderContacts`, `showStatus`, `setupSelection`), `parseAddresses` (address-header parser).
+  (`createCard`, `renderContacts`, `showLoadError`, `setupSelection`), `parseAddresses` (address-header parser).
 - `main()` loads InboxSDK, then wires state and behaviour: `contacts` (Map address -> {address, name, subject}, insertion
   order = recency because pages arrive newest-first), `loadMore()` (paging), `onSelect()` (search/inbox navigation),
   `mount()`.
@@ -77,8 +77,7 @@ InboxSDK needs an app id: replace `APP_ID` in `src/content.js` with one register
   inside the left menu) and a thread row's element (`Lists.registerThreadRowViewHandler`, inside the mail list). The
   panel is inserted before the child of their common ancestor that contains the list. Never replace this with Gmail
   class-name selectors.
-- The panel is a flex-column wrapper: a status line, a scrolling list (`panel.list`, holds the cards), and the resize
-  handle. Render into `panel.list` only, so the handle/status survive re-renders.
+- The panel is a flex-column wrapper: a scrolling list (`panel.list`) and the resize handle. The list holds the cards, then the loading spinner and the load-error row (`showLoadError`: message plus a neutral "Try again" button; while it's shown, scrolling doesn't retry), which `renderContacts` keeps last. With no cards, the spinner and error row are centered in the panel (CSS `:not(:has([data-address]))`). Render into `panel.list` only through `renderContacts`, so the handle, spinner and error row survive re-renders.
 - Selection state is the module-level `selectedAddress`; selecting also fires a `chatmail:contactselect` DOM event on
   the panel (`detail.address`).
 

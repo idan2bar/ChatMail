@@ -284,8 +284,13 @@ function createPanel() {
     '@keyframes chatmail-spin { to { transform: rotate(360deg); } }' +
     // Styled here rather than inline, since an inline `display` would override the `hidden` attribute.
     `#${PANEL_ID} > div > [role="status"]:not([hidden]) { display: flex; justify-content: center; padding: 20px 0; }` +
-    // With no cards yet the spinner is the list's only child: center it in the whole panel.
-    `#${PANEL_ID} > div > [role="status"]:only-child { position: absolute; inset: 0; align-items: center; padding: 0; pointer-events: none; }`;
+    `#${PANEL_ID} [data-load-error]:not([hidden]) { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }` +
+    `#${PANEL_ID} [data-load-error] > span { flex: 1 1 auto; min-width: 0; }` +
+    `#${PANEL_ID} [data-load-error] > button:hover { background: #f1f3f4 !important; }` +
+    // With no cards yet the spinner and the error are centered in the whole panel.
+    `#${PANEL_ID} > div:not(:has([data-address])) > [role="status"] { position: absolute; inset: 0; align-items: center; padding: 0; pointer-events: none; }` +
+    `#${PANEL_ID} > div:not(:has([data-address])) > [data-load-error] { position: absolute; inset: 0; flex-direction: column; justify-content: center; text-align: center; padding: 0 16px; }` +
+    `#${PANEL_ID} > div:not(:has([data-address])) > [data-load-error] > span { flex: 0 0 auto; }`;
   panel.append(hideBar);
   panel.list = list;
 
@@ -306,7 +311,33 @@ function createPanel() {
   });
   spinner.append(ring);
   panel.spinner = spinner;
-  list.append(spinner);
+
+  // Load error with a retry button, shown below the last card (or centered when there are none);
+  // renderContacts keeps it last. See showLoadError.
+  const errorRow = document.createElement('div');
+  errorRow.hidden = true;
+  errorRow.dataset.loadError = '';
+  const errorText = document.createElement('span');
+  Object.assign(errorText.style, { color: GRAY, fontSize: '12px' });
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.textContent = 'Try again';
+  Object.assign(retry.style, {
+    flex: '0 0 auto',
+    font: 'inherit',
+    fontSize: '12px',
+    fontWeight: '500',
+    color: '#3c4043',
+    background: 'transparent',
+    border: '1px solid #dadce0',
+    borderRadius: '16px',
+    padding: '4px 12px',
+    cursor: 'pointer',
+  });
+  retry.addEventListener('click', () => errorRow.onRetry());
+  errorRow.append(errorText, retry);
+  panel.errorRow = errorRow;
+  list.append(spinner, errorRow);
   panel.append(list, createResizeHandle(panel));
   return panel;
 }
@@ -447,7 +478,7 @@ function renderContacts(panel, contacts) {
     }
     return entry.card;
   });
-  wanted.push(panel.spinner);
+  wanted.push(panel.spinner, panel.errorRow); // always last, below the cards
   wanted.forEach((node, i) => {
     if (list.children[i] !== node) list.insertBefore(node, list.children[i] || null);
   });
@@ -476,17 +507,16 @@ function mailOwners(myAddress, { from, to, cc }) {
   return owners.filter((a) => a.address !== myAddress);
 }
 
-/** Shows a status line (e.g. an error) above the cards; empty text hides it. */
-function showStatus(panel, text) {
-  let el = panel.querySelector('[data-status]');
-  if (!el) {
-    el = document.createElement('div');
-    el.dataset.status = '';
-    Object.assign(el.style, { color: GRAY, fontSize: '12px', padding: '8px 12px' });
-    panel.insertBefore(el, panel.list);
-  }
-  el.textContent = text;
-  el.hidden = !text;
+/**
+ * Shows the load error row (`panel.errorRow`, the list's last child): the message and a neutral
+ * "Try again" button that calls `onRetry`. It sits below the last card, or is centered in the panel
+ * (button under the text) when there are no cards. An empty message hides it.
+ */
+function showLoadError(panel, message, onRetry) {
+  const row = panel.errorRow;
+  row.onRetry = onRetry;
+  row.firstChild.textContent = message || '';
+  row.hidden = !message;
 }
 
 function setupSelection(panel, rerender, onSelect) {
@@ -556,9 +586,7 @@ async function main() {
   const contacts = new Map();
   let nextPageToken = undefined; // undefined: nothing loaded yet, null: no more pages
   let loading = false;
-  // The last load failed: scrolling retries only after the list was scrolled away from the bottom, since
-  // the error line itself changes the list's height and would otherwise retry in a loop.
-  let loadFailed = false;
+  let loadError = false; // the error row is shown: only its "Try again" button (or reopening the panel) retries
 
   // Every background request is scoped to the account shown in this tab.
   const askBackground = (message) =>
@@ -650,25 +678,25 @@ async function main() {
     const panel = document.getElementById(PANEL_ID);
     if (!panel || loading || nextPageToken === null) return;
     loading = true;
+    loadError = false;
+    showLoadError(panel, null);
     panel.spinner.hidden = false;
     try {
       const page = await askBackground({ type: 'chatmail:listInbox', pageToken: nextPageToken });
       nextPageToken = page.nextPageToken;
       addMessages(page.messages);
-      showStatus(panel, '');
       refresh();
       loadUnreadCounts();
       loadPhotos();
     } catch (err) {
       console.error('[ChatMail]', err);
-      showStatus(panel, `Couldn't load contacts: ${err.message}`);
-      loadFailed = true;
+      loadError = true;
+      showLoadError(panel, `Couldn't load contacts: ${err.message}`, loadMore);
+    } finally {
       loading = false;
       panel.spinner.hidden = true;
-      return;
     }
-    loading = false;
-    panel.spinner.hidden = true;
+    if (loadError) return;
     const list = panel.list;
     // A hidden panel has no height, so it would look unfilled and load the whole inbox.
     if (panelOpen && nextPageToken !== null && list.scrollHeight <= list.clientHeight + 40) loadMore();
@@ -882,8 +910,7 @@ async function main() {
     setupSelection(panel, refresh, onSelect);
     panel.list.addEventListener('scroll', () => {
       const l = panel.list;
-      if (l.scrollTop + l.clientHeight < l.scrollHeight - 80) loadFailed = false;
-      else if (!loadFailed) loadMore();
+      if (!loadError && l.scrollTop + l.clientHeight >= l.scrollHeight - 80) loadMore();
     });
     refresh();
     if (panelOpen) loadMore();
