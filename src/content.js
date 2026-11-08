@@ -1,555 +1,13 @@
 import * as InboxSDK from '@inboxsdk/core';
+import { mailOwners } from './content/addresses.js';
+import { renderContacts, setupSelection } from './content/cards.js';
+import { alignBottom, findLayout, shiftClearOfMenu, watchContactRow } from './content/layout.js';
+import { createAskBackground } from './content/messaging.js';
+import { PANEL_ID, createNavButton, createPanel, showLoadError } from './content/panel.js';
+import { loadPanelOpen, loadSelection, saveSelection, savePanelOpen } from './content/storage.js';
 
 // Register your own app id at https://www.inboxsdk.com/register
 const APP_ID = 'sdk_Better-Gmail_9f9db1f03f';
-const PANEL_ID = 'better-gmail-side-panel';
-
-/**
- * From the SDK's nav item element, finds the layout row ([menu column][main area]...) and the
- * main area. The menu column is the first ancestor of `navEl` whose parent is a row-direction
- * flex container (that parent is the row); InboxSDK itself relies on the menu column's next
- * sibling being the main area. Returns null if that structure isn't found.
- */
-function findLayout(navEl) {
-  for (let menu = navEl.parentElement; menu && menu.parentElement; menu = menu.parentElement) {
-    const style = getComputedStyle(menu.parentElement);
-    if (style.display !== 'flex' || style.flexDirection !== 'row') continue;
-    const mainArea = menu.nextElementSibling;
-    return mainArea ? { container: menu.parentElement, mainArea } : null;
-  }
-  return null;
-}
-
-const WIDTH_KEY = 'chatmail:panelWidth';
-const MIN_WIDTH = 160;
-const MAX_WIDTH = 500;
-const DEFAULT_WIDTH = 300;
-
-const clampWidth = (w) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(w)));
-
-function loadWidth() {
-  try {
-    const w = parseInt(localStorage.getItem(WIDTH_KEY), 10);
-    if (Number.isFinite(w)) return clampWidth(w);
-  } catch {}
-  return DEFAULT_WIDTH;
-}
-
-function saveWidth(w) {
-  try {
-    localStorage.setItem(WIDTH_KEY, String(w));
-  } catch {}
-}
-
-// Persists the selected contact per tab, so reloading the Gmail tab keeps the card selected and
-// its search showing instead of landing back on a deselected page. sessionStorage (not
-// localStorage) keeps this from leaking into other tabs/windows. The key includes the account, so a
-// selection made in one Gmail account (/u/0, /u/1, ...) never shows up in another one in the same tab.
-const SELECTION_KEY = 'chatmail:selectedContact';
-
-function loadSelection(account) {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(`${SELECTION_KEY}:${account}`));
-    if (saved && typeof saved.address === 'string' && typeof saved.name === 'string') return saved;
-  } catch {}
-  return null;
-}
-
-function saveSelection(account, selection) {
-  try {
-    const key = `${SELECTION_KEY}:${account}`;
-    if (selection) sessionStorage.setItem(key, JSON.stringify(selection));
-    else sessionStorage.removeItem(key);
-  } catch {}
-}
-
-// Whether the panel is shown; toggled by the nav item button. Open unless explicitly closed.
-const OPEN_KEY = 'chatmail:panelOpen';
-
-function loadPanelOpen() {
-  try {
-    return localStorage.getItem(OPEN_KEY) !== 'false';
-  } catch {
-    return true;
-  }
-}
-
-function savePanelOpen(open) {
-  try {
-    localStorage.setItem(OPEN_KEY, String(open));
-  } catch {}
-}
-
-// Material "left panel close" / "left panel open" icons for the nav item button; it shows
-// what a click will do.
-const panelIcon = (path) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="#444746" aria-hidden="true"><path d="${path}"/></svg>`;
-const ICON_CLOSE_PANEL = panelIcon(
-  'M660-320v-320L500-480l160 160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-80v-560H200v560h120Zm80 0h360v-560H400v560Zm-80 0H200h120Z',
-);
-const ICON_OPEN_PANEL = panelIcon(
-  'M500-640v320l160-160-160-160ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm120-80v-560H200v560h120Zm80 0h360v-560H400v560Zm-80 0H200h120Z',
-);
-
-/**
- * The menu button that opens/closes the panel: icon + label saying what a click will do, laid
- * out like Gmail's own menu items (icon centered 36px from the menu's edge, label at 72px). The
- * layout is the same in every state: in the collapsed menu the label starts past the button's
- * edge and is clipped, so there is no collapsed/expanded switch to jump when the menu animates.
- */
-function createNavButton(onClick) {
-  const el = document.createElement('button');
-  el.type = 'button';
-  Object.assign(el.style, {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '18px',
-    boxSizing: 'border-box',
-    width: 'calc(100% - 16px)',
-    height: '40px',
-    margin: '0 8px 8px',
-    padding: '0 0 0 16px',
-    border: '0',
-    borderRadius: '20px',
-    background: 'transparent',
-    textAlign: 'left',
-    overflow: 'hidden',
-    // Text style of Gmail's menu items.
-    userSelect: 'none',
-    lineHeight: '20px',
-    whiteSpace: 'nowrap',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    webkitFontSmoothing: 'antialiased',
-    fontFamily: '"Google Sans",Roboto,RobotoDraft,Helvetica,Arial,sans-serif',
-    fontSize: '.875rem',
-    letterSpacing: 'normal',
-    color: 'rgb(32,33,36)',
-    textShadow: 'none',
-  });
-  const icon = document.createElement('span');
-  Object.assign(icon.style, { display: 'flex', flex: '0 0 24px' });
-  const label = document.createElement('span');
-  el.append(icon, label);
-  el.addEventListener('mouseenter', () => (el.style.background = 'rgba(60,64,67,0.12)'));
-  el.addEventListener('mouseleave', () => (el.style.background = 'transparent'));
-  el.addEventListener('click', onClick);
-  return {
-    el,
-    update(open) {
-      icon.innerHTML = open ? ICON_CLOSE_PANEL : ICON_OPEN_PANEL;
-      label.textContent = open ? 'Close Chat Mail' : 'Open Chat Mail';
-    },
-  };
-}
-
-function setWidth(panel, w) {
-  panel.style.flexBasis = `${w}px`;
-  panel.style.width = `${w}px`;
-}
-
-/**
- * The right-edge drag handle. Pointer capture keeps the drag alive outside the
- * handle, and user-select is disabled on the page while dragging.
- */
-function createResizeHandle(panel) {
-  const handle = document.createElement('div');
-  Object.assign(handle.style, {
-    position: 'absolute',
-    top: '0',
-    right: '0',
-    bottom: '0',
-    width: '6px',
-    cursor: 'col-resize',
-    touchAction: 'none',
-    userSelect: 'none',
-    zIndex: '1',
-  });
-  let startX = 0;
-  let startWidth = 0;
-  let prevUserSelect = '';
-  handle.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    handle.setPointerCapture(e.pointerId);
-    startX = e.clientX;
-    startWidth = panel.getBoundingClientRect().width;
-    prevUserSelect = document.body.style.userSelect;
-    document.body.style.userSelect = 'none';
-    handle.style.background = 'rgba(26,115,232,0.35)';
-  });
-  handle.addEventListener('pointermove', (e) => {
-    if (!handle.hasPointerCapture(e.pointerId)) return;
-    setWidth(panel, clampWidth(startWidth + e.clientX - startX));
-  });
-  const end = (e) => {
-    if (!handle.hasPointerCapture(e.pointerId)) return;
-    handle.releasePointerCapture(e.pointerId);
-    document.body.style.userSelect = prevUserSelect;
-    handle.style.background = '';
-    saveWidth(clampWidth(panel.getBoundingClientRect().width));
-  };
-  handle.addEventListener('pointerup', end);
-  handle.addEventListener('pointercancel', end);
-  return handle;
-}
-
-/**
- * Makes the panel end at the same bottom edge as Gmail's white card, whatever gap Gmail
- * leaves below it inside the shared row. The card is the main area's content, so the gap is
- * the row's bottom minus the lowest bottom of the main area's children (the main area itself
- * if it has none). Everything it sets up is torn down when `signal` aborts.
- */
-function alignBottom(panel, container, mainArea, signal) {
-  const sync = () => {
-    const bottom = container.getBoundingClientRect().bottom;
-    const kids = [...mainArea.children];
-    const cardBottom = kids.length
-      ? Math.max(...kids.map((k) => k.getBoundingClientRect().bottom))
-      : mainArea.getBoundingClientRect().bottom;
-    panel.style.marginBottom = `${Math.max(0, Math.round(bottom - cardBottom))}px`;
-  };
-  const ro = new ResizeObserver(sync);
-  ro.observe(container);
-  ro.observe(mainArea);
-  const observeKids = () => [...mainArea.children].forEach((k) => ro.observe(k)); // re-observing is harmless
-  observeKids();
-  // Gmail swaps the main area's children (e.g. when switching views); follow the current ones.
-  const mo = new MutationObserver(() => {
-    observeKids();
-    sync();
-  });
-  mo.observe(mainArea, { childList: true });
-  window.addEventListener('resize', sync, { signal });
-  signal.addEventListener('abort', () => {
-    ro.disconnect();
-    mo.disconnect();
-  });
-  sync();
-}
-
-/**
- * When the menu is collapsed Gmail overlays it on the content row and reserves its width as
- * empty space between the panel and the main area, leaving the panel under the menu icons.
- * Move that space to the panel's left: measure the gap the panel's natural position leaves
- * before the main area, then shift the panel right by it and shrink its right margin by the
- * same amount so the main area doesn't move. Everything it sets up is torn down when `signal` aborts.
- */
-function shiftClearOfMenu(panel, container, mainArea, signal) {
-  const GAP = 8; // the panel's normal right margin
-  const sync = () => {
-    panel.style.marginLeft = '0px';
-    panel.style.marginRight = `${GAP}px`;
-    const { left, width } = panel.getBoundingClientRect();
-    const shift = Math.max(0, Math.round(mainArea.getBoundingClientRect().left - (left + width + GAP)));
-    panel.style.marginLeft = `${shift}px`;
-    panel.style.marginRight = `${GAP - shift}px`;
-  };
-  const ro = new ResizeObserver(sync);
-  ro.observe(container);
-  ro.observe(mainArea);
-  container.addEventListener('transitionend', sync, { signal });
-  window.addEventListener('resize', sync, { signal });
-  signal.addEventListener('abort', () => ro.disconnect());
-  sync();
-}
-
-/**
- * The panel is a non-scrolling flex-column wrapper holding a scrollable list
- * (`panel.list`, which renderContacts fills) and the resize handle.
- */
-function createPanel() {
-  const panel = document.createElement('div');
-  panel.id = PANEL_ID;
-  const width = loadWidth();
-  Object.assign(panel.style, {
-    alignSelf: 'stretch', // fill the available height of the flex row
-    flex: `0 0 ${width}px`,
-    width: `${width}px`,
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '0',
-    contain: 'size', // its content never contributes to the row's height
-    boxSizing: 'border-box',
-    margin: '0 8px 0 0',
-    borderRadius: '16px',
-    background: '#fff',
-    overflow: 'hidden',
-    font: '14px/1.4 "Google Sans", Roboto, Arial, sans-serif',
-  });
-
-  const list = document.createElement('div');
-  Object.assign(list.style, {
-    flex: '1 1 auto',
-    minHeight: '0',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    scrollbarWidth: 'none',
-    padding: '4px',
-  });
-  const hideBar = document.createElement('style');
-  hideBar.textContent =
-    `#${PANEL_ID} > div::-webkit-scrollbar { display: none; }` +
-    '@keyframes chatmail-spin { to { transform: rotate(360deg); } }' +
-    // Styled here rather than inline, since an inline `display` would override the `hidden` attribute.
-    `#${PANEL_ID} > div > [role="status"]:not([hidden]) { display: flex; justify-content: center; padding: 20px 0; }` +
-    `#${PANEL_ID} [data-load-error]:not([hidden]) { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }` +
-    `#${PANEL_ID} [data-load-error] > span { flex: 1 1 auto; min-width: 0; }` +
-    `#${PANEL_ID} [data-load-error] > button:hover { background: #f1f3f4 !important; }` +
-    // With no cards yet the spinner and the error are centered in the whole panel.
-    `#${PANEL_ID} > div:not(:has([data-address])) > [role="status"] { position: absolute; inset: 0; align-items: center; padding: 0; pointer-events: none; }` +
-    `#${PANEL_ID} > div:not(:has([data-address])) > [data-load-error] { position: absolute; inset: 0; flex-direction: column; justify-content: center; text-align: center; padding: 0 16px; }` +
-    `#${PANEL_ID} > div:not(:has([data-address])) > [data-load-error] > span { flex: 0 0 auto; }`;
-  panel.append(hideBar);
-  panel.list = list;
-
-  // Shown below the last card while the next batch loads (renderContacts keeps it last).
-  const spinner = document.createElement('div');
-  spinner.hidden = true;
-  spinner.setAttribute('role', 'status');
-  spinner.setAttribute('aria-label', 'Loading more contacts');
-  const ring = document.createElement('div');
-  Object.assign(ring.style, {
-    width: '28px',
-    height: '28px',
-    boxSizing: 'border-box',
-    border: '3px solid transparent',
-    borderTopColor: '#1a73e8',
-    borderRadius: '50%',
-    animation: 'chatmail-spin 0.8s linear infinite',
-  });
-  spinner.append(ring);
-  panel.spinner = spinner;
-
-  // Load error with a retry button, shown below the last card (or centered when there are none);
-  // renderContacts keeps it last. See showLoadError.
-  const errorRow = document.createElement('div');
-  errorRow.hidden = true;
-  errorRow.dataset.loadError = '';
-  const errorText = document.createElement('span');
-  Object.assign(errorText.style, { color: GRAY, fontSize: '12px' });
-  const retry = document.createElement('button');
-  retry.type = 'button';
-  retry.textContent = 'Try again';
-  Object.assign(retry.style, {
-    flex: '0 0 auto',
-    font: 'inherit',
-    fontSize: '12px',
-    fontWeight: '500',
-    color: '#3c4043',
-    background: 'transparent',
-    border: '1px solid #dadce0',
-    borderRadius: '16px',
-    padding: '4px 12px',
-    cursor: 'pointer',
-  });
-  retry.addEventListener('click', () => errorRow.onRetry());
-  errorRow.append(errorText, retry);
-  panel.errorRow = errorRow;
-  list.append(spinner, errorRow);
-  panel.append(list, createResizeHandle(panel));
-  return panel;
-}
-
-// --- Contact list -----------------------------------------------------------
-
-const GRAY = '#5f6368';
-const USER_ICON =
-  '<svg viewBox="0 0 24 24" width="22" height="22" fill="#fff" aria-hidden="true">' +
-  '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-3.3 0-8 1.7-8 5v1h16v-1c0-3.3-4.7-5-8-5z"/></svg>';
-
-let selectedAddress = null;
-
-// One avatar element per address, reused by every re-render: a rebuilt avatar would show the generic
-// icon again until its image reloaded, which flickers on each selection change.
-const avatars = new Map();
-const cards = new Map(); // address -> { key, card }, see renderContacts
-
-/** Shows the first of `candidates` ({ url, logo }) that loads; the generic icon stays if none does. */
-function loadAvatarImage(avatar, [candidate, ...rest]) {
-  if (!candidate) return;
-  const img = document.createElement('img');
-  img.referrerPolicy = 'no-referrer';
-  // A photo fills the circle; a logo sits inside it on white.
-  Object.assign(img.style, { width: '100%', height: '100%', boxSizing: 'border-box' });
-  if (candidate.logo) Object.assign(img.style, { objectFit: 'contain', padding: '6px' });
-  else img.style.objectFit = 'cover';
-  img.addEventListener('load', () => {
-    avatar.style.background = candidate.logo ? '#fff' : '#9aa0a6';
-    avatar.replaceChildren(img);
-  });
-  img.addEventListener('error', () => loadAvatarImage(avatar, rest));
-  img.src = candidate.url;
-}
-
-function getAvatar(address, candidates) {
-  let avatar = avatars.get(address);
-  if (!avatar) {
-    avatar = document.createElement('div');
-    Object.assign(avatar.style, {
-      flex: '0 0 36px',
-      width: '36px',
-      height: '36px',
-      borderRadius: '50%',
-      background: '#9aa0a6',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-    });
-    avatar.innerHTML = USER_ICON;
-    avatars.set(address, avatar);
-  }
-  const key = candidates.map((c) => c.url).join(' ');
-  if (key && avatar.dataset.images !== key) {
-    avatar.dataset.images = key;
-    loadAvatarImage(avatar, candidates);
-  }
-  return avatar;
-}
-
-function createCard({ address, name, subject, unread, latestUnread, images }) {
-  const card = document.createElement('div');
-  card.dataset.address = address;
-  card.setAttribute('role', 'option');
-  card.tabIndex = 0;
-  const selected = address === selectedAddress;
-  card.setAttribute('aria-selected', String(selected));
-  Object.assign(card.style, {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    background: selected ? 'rgba(26,115,232,0.16)' : 'transparent',
-  });
-
-  const avatar = getAvatar(address, images);
-
-  const text = document.createElement('div');
-  Object.assign(text.style, { minWidth: 0, flex: '1 1 auto' });
-  const nameEl = document.createElement('div');
-  nameEl.textContent = name || address;
-  nameEl.title = address;
-  const subjectEl = document.createElement('div');
-  subjectEl.textContent = subject;
-  Object.assign(subjectEl.style, { color: GRAY, fontSize: '12px' });
-  for (const el of [nameEl, subjectEl]) {
-    Object.assign(el.style, { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' });
-  }
-  nameEl.style.fontWeight = '500';
-  text.append(nameEl, subjectEl);
-
-  card.append(avatar, text);
-
-  if (unread > 0) {
-    const badge = document.createElement('div');
-    badge.textContent = unread > 99 ? '99+' : String(unread);
-    badge.title = `${unread > 99 ? '99+' : unread} unread`;
-    Object.assign(badge.style, {
-      position: 'absolute',
-      top: '4px',
-      right: '6px',
-      minWidth: '18px',
-      height: '18px',
-      padding: '0 5px',
-      boxSizing: 'border-box',
-      borderRadius: '9px',
-      background: latestUnread ? '#1a73e8' : '#9aa0a6', // blue: latest mail unread; gray: read
-      color: '#fff',
-      fontSize: '11px',
-      fontWeight: '500',
-      lineHeight: '18px',
-      textAlign: 'center',
-    });
-    card.append(badge);
-  }
-  return card;
-}
-
-/**
- * Renders one card per address, in the order given (most recent mail first).
- * Cards are selectable; selection is kept in `selectedAddress` and announced
- * with a `chatmail:contactselect` event on the panel for later filtering.
- */
-function renderContacts(panel, contacts) {
-  const { list } = panel;
-  // Cards whose data didn't change are kept as they are: rebuilding all of them on every update
-  // (counts, photos and polls arrive constantly) makes a long list flicker.
-  const wanted = contacts.map((c) => {
-    const key = JSON.stringify([c.name, c.subject, c.unread, c.latestUnread, c.images, c.address === selectedAddress]);
-    let entry = cards.get(c.address);
-    if (!entry || entry.key !== key) {
-      entry = { key, card: createCard(c) };
-      cards.set(c.address, entry);
-    }
-    return entry.card;
-  });
-  wanted.push(panel.spinner, panel.errorRow); // always last, below the cards
-  wanted.forEach((node, i) => {
-    if (list.children[i] !== node) list.insertBefore(node, list.children[i] || null);
-  });
-  while (list.children.length > wanted.length) list.lastElementChild.remove();
-  list.setAttribute('role', 'listbox');
-}
-
-/** Parses an address header ("Name <a@b.c>, d@e.f") into [{ address, name }]. */
-function parseAddresses(header) {
-  const out = [];
-  const re = /(?:"([^"]*)"|([^",<]*?))\s*<([^<>\s]+@[^<>\s]+)>|([^\s,<>"]+@[^\s,<>"]+)/g;
-  for (const m of header.matchAll(re)) {
-    const address = (m[3] || m[4]).toLowerCase();
-    out.push({ address, name: (m[1] || m[2] || '').trim() });
-  }
-  return out;
-}
-
-/**
- * The contacts a mail belongs to: its sender, except for mail the user sent themself (From is
- * `myAddress`), which belongs to its To/Cc recipients. The user's own address is never a contact.
- */
-function mailOwners(myAddress, { from, to, cc }) {
-  const sender = parseAddresses(from || '');
-  const owners = sender.some((a) => a.address === myAddress) ? parseAddresses([to, cc].join(',')) : sender.slice(0, 1);
-  return owners.filter((a) => a.address !== myAddress);
-}
-
-/**
- * Shows the load error row (`panel.errorRow`, the list's last child): the message and a neutral
- * "Try again" button that calls `onRetry`. It sits below the last card, or is centered in the panel
- * (button under the text) when there are no cards. An empty message hides it.
- */
-function showLoadError(panel, message, onRetry) {
-  const row = panel.errorRow;
-  row.onRetry = onRetry;
-  row.firstChild.textContent = message || '';
-  row.hidden = !message;
-}
-
-/** Click/keyboard selection of cards; the listeners are removed when `signal` aborts. */
-function setupSelection(panel, rerender, onSelect, signal) {
-  const toggle = (card) => {
-    const address = card.dataset.address;
-    selectedAddress = selectedAddress === address ? null : address;
-    rerender();
-    onSelect(selectedAddress);
-    panel.dispatchEvent(new CustomEvent('chatmail:contactselect', { detail: { address: selectedAddress } }));
-  };
-  panel.addEventListener('click', (e) => {
-    const card = e.target.closest('[data-address]');
-    if (card) toggle(card);
-  }, { signal });
-  panel.addEventListener('keydown', (e) => {
-    const card = e.target.closest?.('[data-address]');
-    if (card && (e.key === 'Enter' || e.key === ' ')) {
-      e.preventDefault();
-      toggle(card);
-    }
-  }, { signal });
-}
 
 async function main() {
   const sdk = await InboxSDK.load(2, APP_ID);
@@ -562,6 +20,14 @@ async function main() {
   // everything the mount added (panel, style, observers, listeners). Declared up here so it exists
   // before any SDK callback can call mount().
   let mounted = null;
+
+  // The query for the currently selected contact, so a route change can be recognized as "ours"
+  // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
+  // recognizes the page's own reload landing back on that search, so restoring the saved selection
+  // below doesn't immediately get read as a real search and cleared.
+  let selectedAddress = null;
+  let expectedQuery = null;
+  let selectedName = null;
 
   // The nav item is the button that opens/closes the panel, and also gives us a stable element
   // inside the main (left) menu to anchor the panel on.
@@ -604,14 +70,7 @@ async function main() {
   let loadError = false; // the error row is shown: only its "Try again" button (or reopening the panel) retries
 
   // Every background request is scoped to the account shown in this tab.
-  const askBackground = (message) =>
-    new Promise((resolve, reject) =>
-      chrome.runtime.sendMessage({ ...message, account: myAddress }, (res) => {
-        if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
-        else if (!res?.ok) reject(new Error(res?.error || 'No response'));
-        else resolve(res.data);
-      }),
-    );
+  const askBackground = createAskBackground(myAddress);
 
   function addMessages(messages) {
     for (const { id, unread, subject, from, to, cc } of messages) {
@@ -644,6 +103,7 @@ async function main() {
         unread: unreadCounts.get(c.address) || 0,
         images: avatarImages(c.address),
       })),
+      selectedAddress,
     );
   }
 
@@ -759,13 +219,6 @@ async function main() {
   // Keep in sync with the unread-count query in background.js.
   const queryFor = (address) => `in:inbox (from:${address} OR (from:${myAddress} (to:${address} OR cc:${address})))`;
 
-  // The query for the currently selected contact, so a route change can be recognized as "ours"
-  // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
-  // recognizes the page's own reload landing back on that search, so restoring the saved selection
-  // below doesn't immediately get read as a real search and cleared.
-  let expectedQuery = null;
-  let selectedName = null;
-
   // Restore the contact selected before a reload, so the panel and the search box right away
   // reflect the page Gmail already re-rendered, instead of flashing deselected.
   const saved = loadSelection(myAddress);
@@ -794,6 +247,14 @@ async function main() {
     }
   });
 
+  // A card was clicked: select it (or deselect it if it already was), then search / return to the inbox.
+  function toggleContact(panel, address) {
+    selectedAddress = selectedAddress === address ? null : address;
+    refresh();
+    onSelect(selectedAddress);
+    panel.dispatchEvent(new CustomEvent('chatmail:contactselect', { detail: { address: selectedAddress } }));
+  }
+
   function onSelect(address) {
     // A real Gmail search over the whole mailbox; deselecting returns to the inbox.
     if (address) {
@@ -820,85 +281,6 @@ async function main() {
   // simply clears the markers.
   // Runs are coalesced to one per animation frame. The style element and the observer are removed
   // when `signal` aborts.
-  function watchContactRow(root, signal) {
-    const HIDDEN = 'data-chatmail-hidden';
-    const FILTERS = 'data-chatmail-filters';
-    const style = document.createElement('style');
-    style.textContent =
-      `[${HIDDEN}] { display: none !important; }` +
-      `[${FILTERS}] { box-sizing: border-box !important; height: 44px !important; min-height: 44px !important;` +
-      ' padding-top: 12px !important; padding-bottom: 8px !important; }';
-    document.head.append(style);
-    signal.addEventListener('abort', () => style.remove());
-
-    // Puts `attr` on exactly the elements in `els`.
-    const mark = (attr, els) => {
-      for (const el of root.querySelectorAll(`[${attr}]`)) if (!els.has(el)) el.removeAttribute(attr);
-      for (const el of els) if (!el.hasAttribute(attr)) el.setAttribute(attr, '');
-    };
-
-    let marked = false; // whether the last run put any marker
-    const run = () => {
-      if (!expectedQuery && !marked) return;
-      const hidden = new Set();
-      const filters = new Set();
-      if (expectedQuery) {
-        // Contact card: a leaf `role="contentinfo"` whose text is the address, widened to the largest
-        // ancestor that is still just that card (short text, no mail-list table, not the panel).
-        const address = selectedAddress.toLowerCase();
-        const maxText = address.length * 6 + 150;
-        for (const el of root.querySelectorAll('[role="contentinfo"]')) {
-          if (el.children.length || el.textContent.trim().toLowerCase() !== address) continue;
-          let card = el;
-          while (
-            card.parentElement &&
-            card.parentElement !== root &&
-            !card.parentElement.querySelector(`table, #${PANEL_ID}`) &&
-            card.parentElement.textContent.length <= maxText
-          ) {
-            card = card.parentElement;
-          }
-          if (card !== el) hidden.add(card);
-        }
-
-        // Filter chips row: the toolbar holding the search's `data-query`. It's hidden, and its
-        // container (fixed height for two rows) is shrunk to the one remaining row plus padding.
-        for (const q of root.querySelectorAll('[data-query]')) {
-          const bar = q.dataset.query === expectedQuery && q.closest('[role="toolbar"]');
-          if (!bar) continue;
-          hidden.add(bar);
-          filters.add(bar.parentElement);
-        }
-      }
-      mark(HIDDEN, hidden);
-      mark(FILTERS, filters);
-      marked = hidden.size > 0 || filters.size > 0;
-    };
-    // Text and the chips' `data-query` can be filled in after the nodes exist (e.g. when returning
-    // from a mail), so those changes are watched too; the markers themselves don't trigger it.
-    let frame = 0;
-    const mo = new MutationObserver(() => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        frame = 0;
-        run();
-      });
-    });
-    mo.observe(root, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['data-query'],
-    });
-    signal.addEventListener('abort', () => {
-      mo.disconnect();
-      cancelAnimationFrame(frame);
-      // The markers live on Gmail's elements, which outlive this mount; clear them.
-      for (const attr of [HIDDEN, FILTERS]) for (const el of root.querySelectorAll(`[${attr}]`)) el.removeAttribute(attr);
-    });
-    run();
-  }
 
   // Changes made in Gmail (new mail, read/unread, archive, trash, delete; in the list, in an open
   // thread, on another device) show up in the mailbox change log, which is polled with one cheap
@@ -950,6 +332,7 @@ async function main() {
   const pollTimer = setInterval(pollMailboxChanges, POLL_MS);
   document.addEventListener('visibilitychange', pollMailboxChanges); // catch up right away on returning
 
+
   // Idempotent: called on load and on every navigation, it only does work when there is no panel in
   // the current layout (first time, or Gmail rebuilt that part of the page).
   function mount() {
@@ -966,7 +349,7 @@ async function main() {
 
     const controller = new AbortController();
     const { signal } = controller;
-    watchContactRow(container, signal);
+    watchContactRow(container, signal, () => (expectedQuery ? { address: selectedAddress, query: expectedQuery } : null));
 
     const panel = createPanel();
     mounted = { controller, panel, container, mainArea };
@@ -983,7 +366,7 @@ async function main() {
     mainArea.after(panel);
     shiftClearOfMenu(panel, container, mainArea, signal);
     alignBottom(panel, container, mainArea, signal);
-    setupSelection(panel, refresh, onSelect, signal);
+    setupSelection(panel, (address) => toggleContact(panel, address), signal);
     panel.list.addEventListener('scroll', () => {
       const l = panel.list;
       if (!loadError && l.scrollTop + l.clientHeight >= l.scrollHeight - 80) loadMore();
