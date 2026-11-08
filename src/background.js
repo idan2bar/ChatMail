@@ -305,10 +305,9 @@ async function faviconsFor(addresses) {
   return Object.fromEntries(entries.filter(Boolean));
 }
 
-// Every message carries `account`: the Gmail address (lowercased) of the tab that sent it.
-// Toolbar icon: on a Gmail tab it opens the popup (set per tab below); elsewhere the click handler focuses an
-// open Gmail tab, else opens Gmail. (The host permission for mail.google.com lets tabs.query see tab URLs, so no
-// extra permission is needed.)
+// Toolbar icon: on a Gmail tab it opens the popup (set per tab below); elsewhere the click handler activates a
+// Gmail tab in the same window, else opens Gmail in a new tab there. (The host permission for mail.google.com
+// lets tabs.query see tab URLs, so no extra permission is needed.)
 const GMAIL = 'https://mail.google.com/*';
 const enablePopup = (tabId) => {
   chrome.action.setPopup({ tabId, popup: 'main.html' });
@@ -321,16 +320,13 @@ chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
 // Tab-scoped popups are lost when the extension reloads; restore them for tabs that are already open.
 chrome.tabs.query({ url: GMAIL }).then((tabs) => tabs.forEach((t) => enablePopup(t.id)));
 
-chrome.action.onClicked.addListener(async () => {
-  const [tab] = await chrome.tabs.query({ url: 'https://mail.google.com/*' });
-  if (!tab) {
-    await chrome.tabs.create({ url: 'https://mail.google.com/' });
-    return;
-  }
-  await chrome.tabs.update(tab.id, { active: true });
-  await chrome.windows.update(tab.windowId, { focused: true });
+chrome.action.onClicked.addListener(async ({ windowId }) => {
+  const [gmail] = await chrome.tabs.query({ url: GMAIL, windowId });
+  if (gmail) await chrome.tabs.update(gmail.id, { active: true });
+  else await chrome.tabs.create({ windowId, url: 'https://mail.google.com/' });
 });
 
+// Every message carries `account`: the Gmail address (lowercased) of the tab that sent it.
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!String(msg?.type).startsWith('chatmail:')) return;
   const { account } = msg;
