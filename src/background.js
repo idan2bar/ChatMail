@@ -193,52 +193,88 @@ async function countUnreadMany(account, addresses) {
   return Object.fromEntries(addresses.map((a, i) => [a, counts[i]]));
 }
 
+const is404 = (err) => String(err.message).startsWith('Google API 404');
+
 /**
- * Read/unread changes of inbox mail since `historyId` (Gmail's mailbox change log), as
- * { historyId, changes: [{ delta, from, to, cc }] } with delta +1 (became unread) or -1 (was read).
- * Without a `historyId` it only returns the current one, as the starting point. One cheap call,
- * so it can be polled often, and it reports changes whichever way they were made in Gmail.
+ * What changed in the inbox since `startHistoryId` (Gmail's mailbox change log), as
+ * { historyId, inboxChanged, recountAll, messages: [{ id, unread, from, to, cc }] }:
+ * - inboxChanged: the inbox's contents may have changed (mail arrived, left, was deleted): refetch its first page.
+ * - recountAll: some change couldn't be attributed to addresses (deleted or vanished message, history too
+ *   old): recount every loaded contact.
+ * - messages: inbox messages whose unread/inbox state changed, with their current state.
+ * Without a `startHistoryId` it only returns the current one as the baseline (nothing changed).
+ * Events unrelated to the inbox (drafts, stars, other labels) are ignored, so they cost nothing.
  */
-async function unreadChanges(account, startHistoryId) {
-  if (!startHistoryId) {
+async function mailboxChanges(account, startHistoryId) {
+  const baseline = async (changed) => {
     const { historyId } = await gmailGet(account, 'profile', new URLSearchParams({ fields: 'historyId' }));
-    return { historyId, changes: [] };
-  }
-  const events = [];
+    return { historyId, inboxChanged: changed, recountAll: changed, messages: [] };
+  };
+  if (!startHistoryId) return baseline(false);
+
+  const ids = new Set();
+  let inboxChanged = false;
+  let recountAll = false;
   let historyId = startHistoryId;
   let pageToken;
   do {
-    const params = new URLSearchParams({ startHistoryId, labelId: 'UNREAD', maxResults: '100' });
-    params.append('historyTypes', 'labelAdded');
-    params.append('historyTypes', 'labelRemoved');
+    const params = new URLSearchParams({ startHistoryId, maxResults: '100' });
+    for (const t of ['messageAdded', 'messageDeleted', 'labelAdded', 'labelRemoved']) params.append('historyTypes', t);
     if (pageToken) params.set('pageToken', pageToken);
     let page;
     try {
       page = await gmailGet(account, 'history', params);
     } catch (err) {
-      if (String(err.message).startsWith('Google API 404')) return unreadChanges(account); // history too old: restart
+      if (is404(err)) return baseline(true); // history too old: the state is unknown
       throw err;
     }
     historyId = page.historyId || historyId;
     pageToken = page.nextPageToken;
     for (const h of page.history || []) {
-      for (const [list, delta] of [[h.labelsAdded, 1], [h.labelsRemoved, -1]]) {
-        for (const e of list || []) {
-          if (e.labelIds?.includes('UNREAD') && e.message.labelIds?.includes('INBOX')) {
-            events.push({ id: e.message.id, delta });
-          }
+      for (const { message } of h.messagesAdded || []) {
+        if (message.labelIds?.includes('INBOX')) {
+          ids.add(message.id);
+          inboxChanged = true;
         }
+      }
+      for (const e of [...(h.labelsAdded || []), ...(h.labelsRemoved || [])]) {
+        if (e.labelIds?.includes('INBOX')) {
+          ids.add(e.message.id);
+          inboxChanged = true;
+        } else if (e.labelIds?.includes('UNREAD') && e.message.labelIds?.includes('INBOX')) {
+          ids.add(e.message.id);
+        }
+      }
+      for (const { message } of h.messagesDeleted || []) {
+        // A deleted message can't be fetched, so its addresses are unknown.
+        if (message.labelIds?.includes('DRAFT')) continue;
+        if (message.labelIds && !message.labelIds.includes('INBOX')) continue;
+        inboxChanged = true;
+        recountAll = true;
       }
     }
   } while (pageToken);
 
-  const changes = await Promise.all(
-    events.map(async ({ id, delta }) => {
-      const msg = await getMessageMetadata(account, id, ['From', 'To', 'Cc']);
-      return { id, delta, from: header(msg, 'From'), to: header(msg, 'To'), cc: header(msg, 'Cc') };
+  const fetched = await Promise.all(
+    [...ids].map(async (id) => {
+      try {
+        const msg = await getMessageMetadata(account, id, ['From', 'To', 'Cc']);
+        return {
+          id,
+          unread: !!msg.labelIds?.includes('UNREAD'),
+          from: header(msg, 'From'),
+          to: header(msg, 'To'),
+          cc: header(msg, 'Cc'),
+        };
+      } catch (err) {
+        if (!is404(err)) throw err;
+        return null; // gone in the meantime: its addresses are unknown
+      }
     }),
   );
-  return { historyId, changes };
+  const messages = fetched.filter(Boolean);
+  if (messages.length < fetched.length) inboxChanged = recountAll = true;
+  return { historyId, inboxChanged, recountAll, messages };
 }
 
 // --- Contact photos (People API) ----------------------------------------------
@@ -378,7 +414,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (typeof account !== 'string' || !account) work = Promise.reject(new Error('Missing Gmail account in message'));
   else if (msg.type === 'chatmail:listInbox') work = listInboxPage(account, msg.pageToken);
   else if (msg.type === 'chatmail:countUnread') work = countUnreadMany(account, msg.addresses);
-  else if (msg.type === 'chatmail:unreadChanges') work = unreadChanges(account, msg.historyId);
+  else if (msg.type === 'chatmail:mailboxChanges') work = mailboxChanges(account, msg.historyId);
   else if (msg.type === 'chatmail:photos') work = photosFor(account, msg.addresses);
   else if (msg.type === 'chatmail:favicons') work = faviconsFor(msg.addresses);
   else return;

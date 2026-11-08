@@ -622,6 +622,18 @@ async function main() {
     }
   }
 
+  // Merges a fresh first inbox page into the loaded contacts: the page's contacts come first (newest
+  // mail first), then the other loaded contacts in their previous order. Returns the addresses whose
+  // latest mail is new or changed. `contacts` is replaced in place, other code holds the Map.
+  function mergeLatestPage(messages) {
+    const old = new Map(contacts);
+    contacts.clear();
+    addMessages(messages);
+    const changed = [...contacts.values()].filter((c) => old.get(c.address)?.latestId !== c.latestId).map((c) => c.address);
+    for (const [address, contact] of old) if (!contacts.has(address)) contacts.set(address, contact);
+    return changed;
+  }
+
   function refresh() {
     const panel = document.getElementById(PANEL_ID);
     if (!panel) return;
@@ -641,20 +653,28 @@ async function main() {
   const unreadRequested = new Set();
   const UNREAD_BATCH = 10;
 
-  async function loadUnreadCounts() {
-    const pending = [...contacts.keys()].filter((a) => !unreadRequested.has(a));
-    pending.forEach((a) => unreadRequested.add(a));
-    for (let i = 0; i < pending.length; i += UNREAD_BATCH) {
-      const addresses = pending.slice(i, i + UNREAD_BATCH);
+  // Requests exact counts for the addresses, in batches. Returns the addresses whose batch failed.
+  async function recountUnread(addresses) {
+    const failed = [];
+    for (let i = 0; i < addresses.length; i += UNREAD_BATCH) {
+      const batch = addresses.slice(i, i + UNREAD_BATCH);
       try {
-        const counts = await askBackground({ type: 'chatmail:countUnread', addresses });
+        const counts = await askBackground({ type: 'chatmail:countUnread', addresses: batch });
         for (const [address, n] of Object.entries(counts)) unreadCounts.set(address, n);
         refresh();
       } catch (err) {
         console.error('[ChatMail]', err);
-        addresses.forEach((a) => unreadRequested.delete(a)); // retry with the next page load
+        failed.push(...batch);
       }
     }
+    return failed;
+  }
+
+  async function loadUnreadCounts() {
+    const pending = [...contacts.keys()].filter((a) => !unreadRequested.has(a));
+    pending.forEach((a) => unreadRequested.add(a));
+    const failed = await recountUnread(pending);
+    failed.forEach((a) => unreadRequested.delete(a)); // retry with the next page load
   }
 
   // Address -> avatar image: the photo from the user's Google contacts, else the sender domain's
@@ -880,29 +900,40 @@ async function main() {
     run();
   }
 
-  // Read/unread changes made in Gmail (in the list, in an open thread, on another device) show up in
-  // the mailbox change log, which is polled with one cheap request. Each changed message moves the
-  // badges of its contacts by +1 / -1. A count at the API's cap is left alone, since the real
-  // number is unknown.
+  // Changes made in Gmail (new mail, read/unread, archive, trash, delete; in the list, in an open
+  // thread, on another device) show up in the mailbox change log, which is polled with one cheap
+  // request. Counts are never adjusted by +1/-1, they are always re-requested exactly for the
+  // affected contacts. If the inbox's contents changed, its first page is re-fetched and merged,
+  // so new mail brings its contacts to the top and the latest subjects stay current.
   const POLL_MS = 1000;
   let historyId;
   let polling = false;
 
-  async function pollUnreadChanges() {
+  async function pollMailboxChanges() {
     if (polling || document.hidden) return; // only the visible (active) tab polls
     polling = true;
     try {
-      const res = await askBackground({ type: 'chatmail:unreadChanges', historyId });
-      historyId = res.historyId;
-      for (const { id, delta, from, to, cc } of res.changes) {
+      const res = await askBackground({ type: 'chatmail:mailboxChanges', historyId });
+      const affected = new Set();
+      for (const { id, unread, from, to, cc } of res.messages) {
         for (const { address } of mailOwners(myAddress, { from, to, cc })) {
           const contact = contacts.get(address);
-          if (contact?.latestId === id) contact.latestUnread = delta > 0;
-          const n = unreadCounts.get(address);
-          if (n !== undefined && n < 100) unreadCounts.set(address, Math.max(0, n + delta));
+          if (!contact) continue;
+          if (contact.latestId === id) contact.latestUnread = unread;
+          affected.add(address);
         }
       }
-      if (res.changes.length) refresh();
+      if (res.inboxChanged) {
+        const page = await askBackground({ type: 'chatmail:listInbox' });
+        mergeLatestPage(page.messages).forEach((a) => affected.add(a));
+        refresh();
+        loadUnreadCounts();
+        loadPhotos();
+      }
+      // Only advance after everything above succeeded, so a failed poll is retried.
+      historyId = res.historyId;
+      refresh();
+      await recountUnread(res.recountAll ? [...contacts.keys()] : [...affected]);
     } catch (err) {
       if (!chrome.runtime?.id) {
         // The extension was reloaded: this copy of the script is orphaned, a page reload brings the new one.
@@ -915,9 +946,9 @@ async function main() {
       polling = false;
     }
   }
-  pollUnreadChanges();
-  const pollTimer = setInterval(pollUnreadChanges, POLL_MS);
-  document.addEventListener('visibilitychange', pollUnreadChanges); // catch up right away on returning
+  pollMailboxChanges();
+  const pollTimer = setInterval(pollMailboxChanges, POLL_MS);
+  document.addEventListener('visibilitychange', pollMailboxChanges); // catch up right away on returning
 
   // Idempotent: called on load and on every navigation, it only does work when there is no panel in
   // the current layout (first time, or Gmail rebuilt that part of the page).
