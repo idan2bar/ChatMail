@@ -793,7 +793,8 @@ async function main() {
   // shows before the mail list's table exists, so the card's "no table" widening runs up into the
   // element about to hold the list) is corrected as soon as the table appears, and deselecting
   // simply clears the markers.
-  // The style element and the observer are removed when `signal` aborts.
+  // Runs are coalesced to one per animation frame. The style element and the observer are removed
+  // when `signal` aborts.
   function watchContactRow(root, signal) {
     const HIDDEN = 'data-chatmail-hidden';
     const FILTERS = 'data-chatmail-filters';
@@ -811,7 +812,9 @@ async function main() {
       for (const el of els) if (!el.hasAttribute(attr)) el.setAttribute(attr, '');
     };
 
+    let marked = false; // whether the last run put any marker
     const run = () => {
+      if (!expectedQuery && !marked) return;
       const hidden = new Set();
       const filters = new Set();
       if (expectedQuery) {
@@ -844,10 +847,18 @@ async function main() {
       }
       mark(HIDDEN, hidden);
       mark(FILTERS, filters);
+      marked = hidden.size > 0 || filters.size > 0;
     };
     // Text and the chips' `data-query` can be filled in after the nodes exist (e.g. when returning
     // from a mail), so those changes are watched too; the markers themselves don't trigger it.
-    const mo = new MutationObserver(run);
+    let frame = 0;
+    const mo = new MutationObserver(() => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        run();
+      });
+    });
     mo.observe(root, {
       childList: true,
       subtree: true,
@@ -857,6 +868,7 @@ async function main() {
     });
     signal.addEventListener('abort', () => {
       mo.disconnect();
+      cancelAnimationFrame(frame);
       // The markers live on Gmail's elements, which outlive this mount; clear them.
       for (const attr of [HIDDEN, FILTERS]) for (const el of root.querySelectorAll(`[${attr}]`)) el.removeAttribute(attr);
     });
