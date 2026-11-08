@@ -310,7 +310,11 @@ async function faviconsFor(addresses) {
 // open Gmail tab, else opens Gmail. (The host permission for mail.google.com lets tabs.query see tab URLs, so no
 // extra permission is needed.)
 const GMAIL = 'https://mail.google.com/*';
-const enablePopup = (tabId) => chrome.action.setPopup({ tabId, popup: 'main.html' });
+const enablePopup = (tabId) => {
+  chrome.action.setPopup({ tabId, popup: 'main.html' });
+  chrome.action.setTitle({ tabId, title: 'Click to open extension settings' });
+};
+chrome.action.setTitle({ title: 'Click to open Gmail' });
 chrome.tabs.onUpdated.addListener((tabId, change, tab) => {
   if ((change.url || change.status) && tab.url?.startsWith('https://mail.google.com/')) enablePopup(tabId);
 });
