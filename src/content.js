@@ -5,22 +5,19 @@ const APP_ID = 'sdk_Better-Gmail_9f9db1f03f';
 const PANEL_ID = 'better-gmail-side-panel';
 
 /**
- * Finds the nearest common ancestor of two elements.
+ * From the SDK's nav item element, finds the layout row ([menu column][main area]...) and the
+ * main area. The menu column is the first ancestor of `navEl` whose parent is a row-direction
+ * flex container (that parent is the row); InboxSDK itself relies on the menu column's next
+ * sibling being the main area. Returns null if that structure isn't found.
  */
-function commonAncestor(a, b) {
-  for (let node = a; node; node = node.parentElement) {
-    if (node.contains(b)) return node;
+function findLayout(navEl) {
+  for (let menu = navEl.parentElement; menu && menu.parentElement; menu = menu.parentElement) {
+    const style = getComputedStyle(menu.parentElement);
+    if (style.display !== 'flex' || style.flexDirection !== 'row') continue;
+    const mainArea = menu.nextElementSibling;
+    return mainArea ? { container: menu.parentElement, mainArea } : null;
   }
   return null;
-}
-
-/**
- * Returns the child of `parent` that contains `el`.
- */
-function childContaining(parent, el) {
-  let node = el;
-  while (node && node.parentElement !== parent) node = node.parentElement;
-  return node;
 }
 
 const WIDTH_KEY = 'chatmail:panelWidth';
@@ -198,23 +195,24 @@ function createResizeHandle(panel) {
 }
 
 /**
- * Makes the panel end at the same bottom edge as the main mail area, whatever
- * gap Gmail leaves below it inside the shared row.
+ * Makes the panel end at the same bottom edge as Gmail's white card, whatever gap Gmail
+ * leaves below it inside the shared row. The card is the main area's content, so the gap is
+ * the row's bottom minus the lowest bottom of the main area's children (the main area itself
+ * if it has none).
  */
-function alignBottom(panel, container, mainArea, listEl) {
-  // Gmail's white card sits inside the main area; take the outermost ancestor
-  // of the list that stops short of the row's bottom edge.
-  const chain = [];
-  for (let n = listEl; n && n !== container; n = n.parentElement) chain.unshift(n);
+function alignBottom(panel, container, mainArea) {
   const sync = () => {
     const bottom = container.getBoundingClientRect().bottom;
-    const card = chain.find((n) => bottom - n.getBoundingClientRect().bottom > 1) || mainArea;
-    const gap = bottom - card.getBoundingClientRect().bottom;
-    panel.style.marginBottom = `${Math.max(0, Math.round(gap))}px`;
+    const kids = [...mainArea.children];
+    const cardBottom = kids.length
+      ? Math.max(...kids.map((k) => k.getBoundingClientRect().bottom))
+      : mainArea.getBoundingClientRect().bottom;
+    panel.style.marginBottom = `${Math.max(0, Math.round(bottom - cardBottom))}px`;
   };
   const ro = new ResizeObserver(sync);
   ro.observe(container);
-  chain.forEach((n) => ro.observe(n));
+  ro.observe(mainArea);
+  [...mainArea.children].forEach((k) => ro.observe(k));
   window.addEventListener('resize', sync);
   sync();
 }
@@ -543,10 +541,9 @@ function setupSelection(panel, rerender, onSelect) {
 async function main() {
   const sdk = await InboxSDK.load(2, APP_ID);
 
-  // Both elements below are handed to us by the SDK, so the panel position is
-  // derived from them instead of from Gmail's internal class names or ids.
+  // This element is handed to us by the SDK, so the panel position is
+  // derived from it instead of from Gmail's internal class names or ids.
   let navEl = null;
-  let listEl = null;
 
   // The nav item is the button that opens/closes the panel, and also gives us a stable element
   // inside the main (left) menu to anchor the panel on.
@@ -878,21 +875,15 @@ async function main() {
   const pollTimer = setInterval(pollUnreadChanges, POLL_MS);
   document.addEventListener('visibilitychange', pollUnreadChanges); // catch up right away on returning
 
-  // Only used to find an anchor element inside the mail list for mounting.
-  sdk.Lists.registerThreadRowViewHandler((row) => {
-    listEl = row.getElement();
-    mount();
-  });
-
   function mount() {
-    if (!navEl || !listEl || !navEl.isConnected || !listEl.isConnected) return;
+    if (!navEl || !navEl.isConnected) return;
     if (document.getElementById(PANEL_ID)) return;
 
-    // The row that lays out [menu][main area]: the lowest ancestor holding both.
-    const container = commonAncestor(navEl, listEl);
-    // The main white area (inbox tabs + list) is the child holding the list.
-    const mainArea = container && childContaining(container, listEl);
-    if (!mainArea) return;
+    // Everything is derived from the nav item, so mounting doesn't depend on the current
+    // page having mail-list rows (empty folders, open emails, empty searches).
+    const layout = findLayout(navEl);
+    if (!layout) return;
+    const { container, mainArea } = layout;
 
     watchContactRow(container);
 
@@ -905,7 +896,7 @@ async function main() {
     for (let n = mainArea.previousElementSibling; n; n = n.previousElementSibling) n.style.order = '-1';
     mainArea.after(panel);
     shiftClearOfMenu(panel, container, mainArea);
-    alignBottom(panel, container, mainArea, listEl);
+    alignBottom(panel, container, mainArea);
     setupSelection(panel, refresh, onSelect);
     panel.list.addEventListener('scroll', () => {
       const l = panel.list;
