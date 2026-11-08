@@ -76,18 +76,60 @@ async function getToken(account) {
   return tokenRequests.get(account);
 }
 
+// At most MAX_IN_FLIGHT Google requests run at once; the rest wait their turn (FIFO).
+const MAX_IN_FLIGHT = 10;
+let inFlight = 0;
+const waiting = []; // resolve functions of queued requests
+
+/** Runs `task` once a slot is free. */
+async function withSlot(task) {
+  if (inFlight >= MAX_IN_FLIGHT) await new Promise((resolve) => waiting.push(resolve)); // slot is handed over
+  else inFlight++;
+  try {
+    return await task();
+  } finally {
+    const next = waiting.shift();
+    if (next) next();
+    else inFlight--;
+  }
+}
+
+const MAX_RETRIES = 3;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Whether Google rejected the request for rate limiting / a transient server problem (worth retrying). */
+function isRetryable(status, error) {
+  if (status === 429 || status === 500 || status === 503) return true;
+  if (error?.status === 'RESOURCE_EXHAUSTED') return true;
+  const reason = error?.errors?.[0]?.reason;
+  return status === 403 && (reason === 'rateLimitExceeded' || reason === 'userRateLimitExceeded');
+}
+
+/** Wait before retry number `retry` (0-based): `Retry-After` seconds (max 10 s), else 1 s, 2 s, 4 s plus jitter. */
+function retryDelay(res, retry) {
+  const seconds = Number(res.headers.get('Retry-After'));
+  if (res.headers.get('Retry-After') && Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds, 10) * 1000;
+  return 1000 * 2 ** retry + Math.random() * 250;
+}
+
 async function googleGet(account, url) {
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let refreshed = false; // the cached token is dropped and re-fetched at most once
+  for (let retry = 0; ; ) {
     const token = await getToken(account);
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (res.status === 401 && attempt === 0) {
+    const res = await withSlot(() => fetch(url, { headers: { Authorization: `Bearer ${token}` } }));
+    if (res.status === 401 && !refreshed) {
+      refreshed = true;
       await chrome.storage.session.remove(tokenKey(account)); // stale token: refresh once
       continue;
     }
     if (!res.ok) {
-      // Google's error body says why (API disabled, missing scope, not a test user, ...).
-      const detail = await res.json().then((j) => j.error?.message, () => '');
-      throw new Error(`Google API ${res.status}${detail ? `: ${detail}` : ''}`);
+      // Google's error body says why (API disabled, missing scope, not a test user, rate limit, ...).
+      const error = await res.json().then((j) => j.error, () => undefined);
+      if (retry < MAX_RETRIES && isRetryable(res.status, error)) {
+        await sleep(retryDelay(res, retry++));
+        continue;
+      }
+      throw new Error(`Google API ${res.status}${error?.message ? `: ${error.message}` : ''}`);
     }
     // A `fields`-filtered response with nothing left in it (e.g. a search with no hits)
     // can come back with an empty body, which res.json() would reject.
@@ -98,6 +140,17 @@ async function googleGet(account, url) {
 
 const gmailGet = (account, path, params) => googleGet(account, `${gmailBase(account)}/${path}?${params}`);
 
+/** Header value of a message resource, '' if absent. */
+const header = (msg, name) =>
+  msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
+
+/** The raw message resource (`format=metadata`) with only the given headers. */
+function getMessageMetadata(account, id, headers) {
+  const params = new URLSearchParams({ format: 'metadata' });
+  for (const h of headers) params.append('metadataHeaders', h);
+  return gmailGet(account, `messages/${id}`, params);
+}
+
 /** One page of inbox messages (newest first) with just the headers we display. */
 async function listInboxPage(account, pageToken) {
   const list = new URLSearchParams({ labelIds: 'INBOX', maxResults: '25' });
@@ -105,14 +158,8 @@ async function listInboxPage(account, pageToken) {
   const { messages = [], nextPageToken = null } = await gmailGet(account, 'messages', list);
 
   const details = await Promise.all(
-    messages.map((m) => {
-      const p = new URLSearchParams({ format: 'metadata' });
-      for (const h of HEADERS) p.append('metadataHeaders', h);
-      return gmailGet(account, `messages/${m.id}`, p);
-    }),
+    messages.map((m) => getMessageMetadata(account, m.id, HEADERS)),
   );
-  const header = (msg, name) =>
-    msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
   return {
     nextPageToken,
     messages: details.map((msg) => ({
@@ -185,13 +232,9 @@ async function unreadChanges(account, startHistoryId) {
     }
   } while (pageToken);
 
-  const header = (msg, name) =>
-    msg.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? '';
   const changes = await Promise.all(
     events.map(async ({ id, delta }) => {
-      const p = new URLSearchParams({ format: 'metadata' });
-      for (const h of ['From', 'To', 'Cc']) p.append('metadataHeaders', h);
-      const msg = await gmailGet(account, `messages/${id}`, p);
+      const msg = await getMessageMetadata(account, id, ['From', 'To', 'Cc']);
       return { id, delta, from: header(msg, 'From'), to: header(msg, 'To'), cc: header(msg, 'Cc') };
     }),
   );
