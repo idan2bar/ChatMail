@@ -26,6 +26,21 @@ Chrome extension (Manifest V3) that improves the Gmail UI.
 There is no test suite; verify by building, reloading the extension and the Gmail tab, and checking the panel and the
 DevTools console (errors are prefixed `[ChatMail]`).
 
+## Testing in Chrome (dev instance)
+
+Develop and test in a **dedicated Chrome instance**, never the user's real Chrome profiles. It uses its own user-data
+folder `.chrome-dev/` (gitignored, signed in to the demo Gmail account) and remote debugging on port 9222.
+
+- Start it with `powershell -NoProfile -File scripts/dev-chrome.ps1` (check first with
+  `curl -s http://127.0.0.1:9222/json/version`; skip if it already answers).
+- `.mcp.json` points the `chrome-devtools` MCP at it (`--browserUrl=http://127.0.0.1:9222`). Don't switch it back to
+  `--autoConnect` and don't enable remote debugging in the user's real Chrome.
+- Loop: edit -> `npm run build` -> `mcp__chrome-devtools__list_extensions` (get the id; if the extension isn't listed,
+  `install_extension` with `C:\Projects\BetterGmail\dist`) -> `reload_extension` -> reload the Gmail tab
+  (`navigate_page` type reload) -> check `list_console_messages` for `[ChatMail]` errors and `take_screenshot`.
+- If the MCP can't connect, the dev Chrome isn't running: start it with the script above.
+- First sign-in to Gmail and the first OAuth consent in that profile are done by the user, not by you.
+
 ## Workflow
 
 ```
