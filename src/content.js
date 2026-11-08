@@ -466,6 +466,16 @@ function parseAddresses(header) {
   return out;
 }
 
+/**
+ * The contacts a mail belongs to: its sender, except for mail the user sent themself (From is
+ * `myAddress`), which belongs to its To/Cc recipients. The user's own address is never a contact.
+ */
+function mailOwners(myAddress, { from, to, cc }) {
+  const sender = parseAddresses(from || '');
+  const owners = sender.some((a) => a.address === myAddress) ? parseAddresses([to, cc].join(',')) : sender.slice(0, 1);
+  return owners.filter((a) => a.address !== myAddress);
+}
+
 /** Shows a status line (e.g. an error) above the cards; empty text hides it. */
 function showStatus(panel, text) {
   let el = panel.querySelector('[data-status]');
@@ -562,8 +572,8 @@ async function main() {
 
   function addMessages(messages) {
     for (const { id, unread, subject, from, to, cc } of messages) {
-      for (const { address, name } of parseAddresses([from, to, cc].join(','))) {
-        if (address === myAddress || contacts.has(address)) continue;
+      for (const { address, name } of mailOwners(myAddress, { from, to, cc })) {
+        if (contacts.has(address)) continue;
         contacts.set(address, { address, name, subject: subject || '(no subject)', latestId: id, latestUnread: unread });
       }
     }
@@ -678,7 +688,8 @@ async function main() {
     [100, 400, 1000].forEach((ms) => setTimeout(set, ms));
   }
 
-  const queryFor = (address) => `in:inbox (from:${address} OR to:${address} OR cc:${address})`;
+  // Keep in sync with the unread-count query in background.js.
+  const queryFor = (address) => `in:inbox (from:${address} OR (from:${myAddress} (to:${address} OR cc:${address})))`;
 
   // The query for the currently selected contact, so a route change can be recognized as "ours"
   // (a card selecting/deselecting itself) by content rather than by a flag — the same check also
@@ -816,7 +827,7 @@ async function main() {
       historyId = res.historyId;
       if (res.changes.length) console.log('[ChatMail] unread changes', res.changes, [...unreadCounts]); // TEMP debug
       for (const { id, delta, from, to, cc } of res.changes) {
-        for (const { address } of parseAddresses([from, to, cc].join(','))) {
+        for (const { address } of mailOwners(myAddress, { from, to, cc })) {
           const contact = contacts.get(address);
           if (contact?.latestId === id) contact.latestUnread = delta > 0;
           const n = unreadCounts.get(address);

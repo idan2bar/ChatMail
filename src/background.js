@@ -133,7 +133,8 @@ const UNREAD_CAP = 100; // list at most this many ids; the UI shows 99+ beyond 9
  * list request: a full page of ids means "cap or more".
  */
 async function countUnread(account, address) {
-  const q = `in:inbox is:unread (from:${address} OR to:${address} OR cc:${address})`;
+  // Same rule as the card search in content.js: mail belongs to its sender, except mail the user sent.
+  const q = `in:inbox is:unread (from:${address} OR (from:${account} (to:${address} OR cc:${address})))`;
   const params = new URLSearchParams({ q, maxResults: String(UNREAD_CAP), fields: 'messages/id' });
   const { messages = [] } = await gmailGet(account, 'messages', params);
   return messages.length;

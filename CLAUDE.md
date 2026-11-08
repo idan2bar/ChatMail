@@ -57,13 +57,13 @@ InboxSDK needs an app id: replace `APP_ID` in `src/content.js` with one register
 - Vertical side panel inserted between the left main menu and the mail list's white area (outside the inbox tabs),
   stretching to fill the available height. It scrolls vertically and is resizable by dragging its right edge
   (width clamped, persisted in `localStorage`).
-- The panel lists contact cards (senders and addressees of inbox mail, own address excluded), most recent mail first.
+- The panel lists contact cards (a mail belongs to its sender; mail the user sent themself belongs to its To/Cc recipients; own address excluded), most recent mail first.
   Each card shows an avatar circle (the contact's Google photo, else their domain's logo, else a generic icon), the name, and the
   subject of that address's latest mail in gray.
 - Contacts are loaded from the real Gmail data via the Gmail API in lazy batches (next batch when the panel is scrolled
   near the bottom, or while the list doesn't fill the panel).
 - Cards are selectable (one at a time, click again to deselect). Selecting runs a real Gmail search
-  `in:inbox (from:X OR to:X OR cc:X)` through the SDK router; deselecting returns to the inbox.
+  `in:inbox (from:X OR (from:<me> (to:X OR cc:X)))` through the SDK router; deselecting returns to the inbox.
 
 ## How the code fits together
 
@@ -91,7 +91,7 @@ account in `chrome.storage.session` (`chatmail:token:<account>`). Gmail calls us
 messages (`labelIds=INBOX`, 25 per page) and fetches each one with `format=metadata` (From/To/Cc/Subject/Date only),
 returning `{ messages: [{subject, from, to, cc}], nextPageToken }`. A 401 drops the account's cached token and retries
 once; other errors include Google's error message. It also handles `chatmail:countUnread` `{ addresses }` -> `{ address: count }`: one ids-only
-`messages.list` with `q=in:inbox is:unread (from:X OR to:X OR cc:X)` and `maxResults=100` per address; the count is exact
+`messages.list` with `q=in:inbox is:unread (from:X OR (from:<account> (to:X OR cc:X)))` and `maxResults=100` per address; the count is exact
 up to 100 (a full page means "100 or more"), which the card badge shows as `99+`.
 It also handles `chatmail:unreadChanges` `{ historyId }` -> `{ historyId, changes: [{delta, from, to, cc}] }`: one
 `history.list` call (`labelId=UNREAD`, label added/removed) that the content script polls every 1 s (only while its tab is the visible one) to move the badges
