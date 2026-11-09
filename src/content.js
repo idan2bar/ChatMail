@@ -247,6 +247,13 @@ async function main() {
     }
   });
 
+  // The search box's X button only empties the box (an `input` event, no navigation), leaving the
+  // selected contact's results up. Treat an emptied box as deselecting the contact.
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (selectedAddress && mounted && t instanceof HTMLInputElement && t.name === 'q' && t.value === '') toggleContact(mounted.panel, selectedAddress);
+  }, true);
+
   // A card was clicked: select it (or deselect it if it already was), then search / return to the inbox.
   function toggleContact(panel, address) {
     selectedAddress = selectedAddress === address ? null : address;
