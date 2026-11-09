@@ -166,6 +166,7 @@ async function listInboxPage(account, pageToken) {
       id: msg.id,
       unread: !!msg.labelIds?.includes('UNREAD'),
       subject: header(msg, 'Subject'),
+      date: Number(msg.internalDate) || 0,
       from: header(msg, 'From'),
       to: header(msg, 'To'),
       cc: header(msg, 'Cc'),

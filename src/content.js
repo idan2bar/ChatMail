@@ -73,10 +73,10 @@ async function main() {
   const askBackground = createAskBackground(myAddress);
 
   function addMessages(messages) {
-    for (const { id, unread, subject, from, to, cc } of messages) {
+    for (const { id, unread, subject, date, from, to, cc } of messages) {
       for (const { address, name } of mailOwners(myAddress, { from, to, cc })) {
         if (contacts.has(address)) continue;
-        contacts.set(address, { address, name, subject: subject || '(no subject)', latestId: id, latestUnread: unread });
+        contacts.set(address, { address, name, subject: subject || '(no subject)', date, latestId: id, latestUnread: unread });
       }
     }
   }

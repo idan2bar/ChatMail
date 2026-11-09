@@ -83,6 +83,7 @@ InboxSDK needs an app id: replace `APP_ID` in `src/content.js` with one register
 - While a contact is selected, Gmail's own contact card and search filter chips above the results are hidden, and the
   search box shows the contact's name instead of the raw query (replaced only while the box holds exactly that query,
   so text the user types is never overwritten).
+- Cards show the date of the latest mail at the top right, formatted like Gmail's list ("13:20" today, "20 Sept" this year, full date before), with the unread badge below it.
 - Cards show an unread badge (exact count, `99+` from 100): blue when the contact's latest mail is unread, gray otherwise.
 - The list updates live: new or moved mail re-orders contacts and updates their latest subject; read/unread changes update
   badges.

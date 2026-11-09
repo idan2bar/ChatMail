@@ -54,7 +54,19 @@ function getAvatar(address, candidates) {
   return avatar;
 }
 
-function createCard({ address, name, subject, unread, latestUnread, images }, selected) {
+/** Like Gmail's mail list: the time for today's mail ("13:20"), else the day and month ("20 Sept"), with the year for older years. */
+function formatMailDate(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) {
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+  const opts = d.getFullYear() === now.getFullYear() ? { day: 'numeric', month: 'short' } : { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return d.toLocaleDateString('en-GB', opts);
+}
+
+function createCard({ address, name, subject, date, unread, latestUnread, images }, selected) {
   const card = document.createElement('div');
   card.dataset.address = address;
   card.setAttribute('role', 'option');
@@ -87,16 +99,21 @@ function createCard({ address, name, subject, unread, latestUnread, images }, se
   nameEl.style.fontWeight = '500';
   text.append(nameEl, subjectEl);
 
-  card.append(avatar, text);
+  const dateEl = document.createElement('div');
+  dateEl.textContent = formatMailDate(date);
+  Object.assign(dateEl.style, { color: GRAY, fontSize: '11px', whiteSpace: 'nowrap' });
+
+  // Right column: date of the latest mail, with the unread badge below it.
+  const side = document.createElement('div');
+  Object.assign(side.style, { flex: '0 0 auto', alignSelf: 'stretch', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' });
+  side.append(dateEl);
+  card.append(avatar, text, side);
 
   if (unread > 0) {
     const badge = document.createElement('div');
     badge.textContent = unread > 99 ? '99+' : String(unread);
     badge.title = `${unread > 99 ? '99+' : unread} unread`;
     Object.assign(badge.style, {
-      position: 'absolute',
-      top: '4px',
-      right: '6px',
       minWidth: '18px',
       height: '18px',
       padding: '0 5px',
@@ -109,7 +126,7 @@ function createCard({ address, name, subject, unread, latestUnread, images }, se
       lineHeight: '18px',
       textAlign: 'center',
     });
-    card.append(badge);
+    side.append(badge);
   }
   return card;
 }
@@ -123,7 +140,7 @@ export function renderContacts(panel, contacts, selectedAddress) {
   // Cards whose data didn't change are kept as they are: rebuilding all of them on every update
   // (counts, photos and polls arrive constantly) makes a long list flicker.
   const wanted = contacts.map((c) => {
-    const key = JSON.stringify([c.name, c.subject, c.unread, c.latestUnread, c.images, c.address === selectedAddress]);
+    const key = JSON.stringify([c.name, c.subject, c.date, c.unread, c.latestUnread, c.images, c.address === selectedAddress]);
     let entry = cards.get(c.address);
     if (!entry || entry.key !== key) {
       entry = { key, card: createCard(c, c.address === selectedAddress) };
