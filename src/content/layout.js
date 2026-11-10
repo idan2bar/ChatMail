@@ -78,8 +78,14 @@ export function shiftClearOfMenu(panel, container, mainArea, signal) {
   sync();
 }
 
-// For a selected contact, Gmail shows a contact card (avatar, the address, an icon row repeating
-// it, chat actions) above the results, plus a row of search filter chips. The SDK has no API for
+// Longest textContent a contact card can have; anything longer is not just the card.
+const MAX_CARD_TEXT = 400;
+
+// For a selected contact, Gmail shows a contact card (avatar, a display name or the address, the
+// address, chat actions) above the results, plus a row of search filter chips. The query has two
+// `from:` addresses (the contact and the user), so Gmail may show the card for either one, and the
+// card may show a display name rather than the address; it is therefore matched by mentioning any
+// of `getSelection().addresses`. The SDK has no API for
 // them (its hideSearchPageFilterToolbar CSS targets outdated selectors), so they're found by
 // content inside the SDK-anchored container. They're styled through marker attributes that are
 // recomputed on every change: a wrong guess made while the page is still rendering (e.g. the card
@@ -112,22 +118,23 @@ export function watchContactRow(root, signal, getSelection) {
     const hidden = new Set();
     const filters = new Set();
     if (selection) {
-      // Contact card: a leaf `role="contentinfo"` whose text is the address, widened to the largest
-      // ancestor that is still just that card (short text, no mail-list table, not the panel).
-      const address = selection.address.toLowerCase();
-      const maxText = address.length * 6 + 150;
+      // Contact card: every `role="contentinfo"` is widened to the largest ancestor that is still
+      // just a card (short text, no mail-list table, filter toolbar or panel, not `root`), and that
+      // is hidden if it mentions one of the query's addresses. The set dedups the card's several
+      // contentinfos; an unrelated one (the page footer) never mentions them.
+      const addresses = selection.addresses.map((a) => a.toLowerCase());
       for (const el of root.querySelectorAll('[role="contentinfo"]')) {
-        if (el.children.length || el.textContent.trim().toLowerCase() !== address) continue;
         let card = el;
         while (
           card.parentElement &&
           card.parentElement !== root &&
-          !card.parentElement.querySelector(`table, #${PANEL_ID}`) &&
-          card.parentElement.textContent.length <= maxText
+          !card.parentElement.querySelector(`table, #${PANEL_ID}, [role="toolbar"]`) &&
+          card.parentElement.textContent.length <= MAX_CARD_TEXT
         ) {
           card = card.parentElement;
         }
-        if (card !== el) hidden.add(card);
+        const text = card.textContent.toLowerCase();
+        if (addresses.some((a) => text.includes(a))) hidden.add(card);
       }
 
       // Filter chips row: the toolbar holding the search's `data-query`. It's hidden, and its

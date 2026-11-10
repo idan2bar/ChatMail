@@ -356,7 +356,7 @@ async function main() {
 
     const controller = new AbortController();
     const { signal } = controller;
-    watchContactRow(container, signal, () => (expectedQuery ? { address: selectedAddress, query: expectedQuery } : null));
+    watchContactRow(container, signal, () => (expectedQuery ? { addresses: [selectedAddress, myAddress], query: expectedQuery } : null));
 
     const panel = createPanel();
     mounted = { controller, panel, container, mainArea };
