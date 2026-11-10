@@ -25,3 +25,18 @@ already have a photo are not re-uploaded.
 Usage: copy `contacts.html`, `contacts.js`, `avatars.js` and `emails.json` into `dist/demo-mail/`, open
 `chrome-extension://kbnlifhlkedlmebnkpjolokkjpbbihfh/demo-mail/contacts.html`, click Create contacts and consent once
 (scopes `contacts` + `gmail.readonly`). Poll `window.demoContactsProgress` / `window.demoContactsResult`.
+
+## Reset
+
+`reset.html` / `reset.js` undo what the import pages created in the test account, so a fresh import can be done. Copy
+both into `dist/demo-mail/` and open `chrome-extension://kbnlifhlkedlmebnkpjolokkjpbbihfh/demo-mail/reset.html`. Aborts
+unless the signed-in account matches the account field. Poll `window.demoResetProgress` / `window.demoResetResult`.
+
+- **Trash demo mail**: lists all mailbox messages, reads only their Message-ID header, and moves those ending in
+  `@demo-mail.example>` to Trash (`messages.trash`; never permanent deletion, `emails.json` is not consulted). Gmail empties
+  Trash after 30 days. The import's skip check ignores trashed mail, so a re-import inserts fresh copies. Needs one extra
+  consent (scope `gmail.modify`).
+- **Delete demo contacts**: deletes only contacts whose biography is exactly `demo-mail sample contact` (one per second).
+  Scopes `contacts` + `gmail.readonly`.
+
+Recommended flow before taking screenshots: Trash demo mail -> Import (so the dates are relative to that day).

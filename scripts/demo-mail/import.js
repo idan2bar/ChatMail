@@ -52,7 +52,7 @@ function googleError(text) {
     const e = JSON.parse(text).error;
     return { message: String(e.message || text), reasons: (e.errors || []).map((x) => x.reason) };
   } catch {
-    return { message: text.replace(/s+/g, " ").trim(), reasons: [] };
+    return { message: text.replace(/\s+/g, " ").trim(), reasons: [] };
   }
 }
 const isRateLimit = (status, g) =>
