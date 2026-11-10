@@ -16,10 +16,8 @@ function loadAvatarImage(avatar, [candidate, ...rest]) {
   if (!candidate) return;
   const img = document.createElement('img');
   img.referrerPolicy = 'no-referrer';
-  // A photo fills the circle; a logo sits inside it on white.
-  Object.assign(img.style, { width: '100%', height: '100%', boxSizing: 'border-box' });
-  if (candidate.logo) Object.assign(img.style, { objectFit: 'contain', padding: '6px' });
-  else img.style.objectFit = 'cover';
+  // Photos and logos both fill the circle.
+  Object.assign(img.style, { width: '100%', height: '100%', objectFit: 'cover' });
   img.addEventListener('load', () => {
     avatar.style.background = candidate.logo ? '#fff' : '#9aa0a6';
     avatar.replaceChildren(img);
