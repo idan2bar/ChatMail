@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Demo avatars preview</title>
+<style>
+  body { font-family: sans-serif; margin: 24px; background: #f6f7f9; color: #222; }
+  h2 { margin: 24px 0 12px; font-size: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+  .card { background: #fff; border-radius: 10px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .imgs { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .imgs > div { border-radius: 50%; overflow: hidden; flex: none; }
+  .small { width: 40px; height: 40px; }
+  .big { width: 96px; height: 96px; }
+  .imgs svg { display: block; width: 100%; height: 100%; }
+  .name { font-weight: 600; font-size: 14px; }
+  .email, .kind { font-size: 12px; color: #666; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Demo avatars</h1>
+<div id="root">Loading...</div>
+<script src="avatars.js"></script>
+<script src="preview.js"></script>
+</body>
+</html>

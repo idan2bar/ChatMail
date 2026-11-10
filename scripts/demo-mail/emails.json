@@ -1,0 +1,2026 @@
+[
+  {
+    "from": {
+      "name": "Hammer & Nail Hardware",
+      "email": "deals@hammernail.example"
+    },
+    "subject": "Holiday lights are in",
+    "body": "LEDs, timers and extension cords. Stock up before the rush.\n\nRead more on our site.\n\nUnsubscribe: https://hammernail.example/unsubscribe",
+    "daysAgo": 42,
+    "time": "06:59",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "Meal prep for people who hate meal prep",
+    "body": "Cook once, eat three ways. Our lazy plan for the week ahead.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 41,
+    "time": "16:51",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Skillbarn",
+      "email": "learn@skillbarn.example"
+    },
+    "subject": "Your certificate is ready to download",
+    "body": "Congratulations on completing Beginner Woodworking!\n\nRead more on our site.\n\nUnsubscribe: https://skillbarn.example/unsubscribe",
+    "daysAgo": 40,
+    "time": "08:29",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Bloomery Flowers",
+      "email": "hello@bloomery.example"
+    },
+    "subject": "Send something thoughtful, from $25",
+    "body": "Same-week delivery on all small arrangements.\n\nRead more on our site.\n\nUnsubscribe: https://bloomery.example/unsubscribe",
+    "daysAgo": 40,
+    "time": "09:28",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Greenthumb Weekly",
+      "email": "garden@greenthumb.example"
+    },
+    "subject": "Bulb sale: tulips, crocus and daffodils",
+    "body": "Order by the 20th for delivery at the right planting time.\n\nRead more on our site.\n\nUnsubscribe: https://greenthumb.example/unsubscribe",
+    "daysAgo": 39,
+    "time": "19:04",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Harbor Credit Union",
+      "email": "statements@harborcu.example"
+    },
+    "subject": "Your September statement is ready",
+    "body": "Your monthly statement is now available. Sign in to the secure site to view it.",
+    "daysAgo": 38,
+    "time": "07:16",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Wayfarer Deals",
+      "email": "offers@wayfarerdeals.example"
+    },
+    "subject": "Members only: extra 15% off hotels",
+    "body": "Use your member code at checkout before the end of the month.\n\nRead more on our site.\n\nUnsubscribe: https://wayfarerdeals.example/unsubscribe",
+    "daysAgo": 38,
+    "time": "08:27",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Elm Street Market",
+      "email": "market@elmstreetmarket.example"
+    },
+    "subject": "Market notes: what is in season now",
+    "body": "Kale, leeks, pears and the last of the tomatoes. Plan your basket.\n\nRead more on our site.\n\nUnsubscribe: https://elmstreetmarket.example/unsubscribe",
+    "daysAgo": 37,
+    "time": "08:27",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Sofia Lindqvist",
+      "email": "sofia.l@inboxhub.example"
+    },
+    "subject": "Photo you asked about",
+    "body": "Found the old picture from the festival. Attaching it here, hope it is the right one.",
+    "daysAgo": 37,
+    "time": "11:20",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Byte Weekly",
+      "email": "hello@byteweekly.example"
+    },
+    "subject": "Byte Weekly #212: terminals, tabs and tiny wins",
+    "body": "A shorter issue this week, but a good one. Three tools that quietly save an hour a day.\n\nRead more on our site.\n\nUnsubscribe: https://byteweekly.example/unsubscribe",
+    "daysAgo": 36,
+    "time": "05:23",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Streamly",
+      "email": "billing@streamly.example"
+    },
+    "subject": "Payment received, thank you",
+    "body": "We received your monthly payment. Your next renewal is in 30 days.",
+    "daysAgo": 36,
+    "time": "14:34",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Brewlane Coffee",
+      "email": "beans@brewlane.example"
+    },
+    "subject": "Free mug with orders over $40 this weekend",
+    "body": "Our speckled ceramic mug, on us. While supplies last.\n\nRead more on our site.\n\nUnsubscribe: https://brewlane.example/unsubscribe",
+    "daysAgo": 35,
+    "time": "08:17",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Trailhead Outdoors",
+      "email": "trails@trailhead.example"
+    },
+    "subject": "End-of-season clearance up to 50% off",
+    "body": "Tents, packs and jackets from the last summer collection.\n\nRead more on our site.\n\nUnsubscribe: https://trailhead.example/unsubscribe",
+    "daysAgo": 34,
+    "time": "05:00",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Pixel & Grain",
+      "email": "studio@pixelgrain.example"
+    },
+    "subject": "Studio visit: a poster maker's tiny workspace",
+    "body": "Eighty square feet, one printing press, a lot of ink.\n\nRead more on our site.\n\nUnsubscribe: https://pixelgrain.example/unsubscribe",
+    "daysAgo": 34,
+    "time": "08:33",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Pageturn Books",
+      "email": "news@pageturn.example"
+    },
+    "subject": "Book club kit: questions for 5 new titles",
+    "body": "Discussion guides, snack pairings and a printable reading schedule.\n\nRead more on our site.\n\nUnsubscribe: https://pageturn.example/unsubscribe",
+    "daysAgo": 33,
+    "time": "08:28",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Lumen Power",
+      "email": "billing@lumenpower.example"
+    },
+    "subject": "Usage report: you used 8% less this month",
+    "body": "Great job! See tips to save even more on your next bill.",
+    "daysAgo": 33,
+    "time": "11:18",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Penny Wise",
+      "email": "tips@pennywise.example"
+    },
+    "subject": "Is a no-spend weekend worth it?",
+    "body": "We tried it for a month. Here is what we saved and what we missed.\n\nRead more on our site.\n\nUnsubscribe: https://pennywise.example/unsubscribe",
+    "daysAgo": 32,
+    "time": "10:18",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Leila Haddad",
+      "email": "leila.haddad@mailbox.example"
+    },
+    "subject": "Plant swap this weekend",
+    "body": "We are swapping cuttings on Sunday afternoon. I saved you a monstera cutting.",
+    "daysAgo": 32,
+    "time": "18:35",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Cartwell Shop",
+      "email": "orders@cartwell.example"
+    },
+    "subject": "How was your order? Leave a quick review",
+    "body": "Tell other shoppers about your new desk lamp.",
+    "daysAgo": 31,
+    "time": "09:25",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Skillbarn",
+      "email": "learn@skillbarn.example"
+    },
+    "subject": "Learner spotlight: from hobby to side business",
+    "body": "Meet three students who turned a class project into real customers.\n\nRead more on our site.\n\nUnsubscribe: https://skillbarn.example/unsubscribe",
+    "daysAgo": 31,
+    "time": "15:58",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/web] You were mentioned in #455",
+    "body": "Tomasz Kowalski: @you could you take a look at the flaky date test?",
+    "daysAgo": 30,
+    "time": "06:11",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "Weeknight pasta, ranked by effort",
+    "body": "Ten recipes sorted from 15-minute wonders to slow-simmered comfort.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 30,
+    "time": "07:01",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Starlane Rewards",
+      "email": "points@starlane.example"
+    },
+    "subject": "Refer a friend, both get 500 points",
+    "body": "Share your link and watch the points stack up.\n\nRead more on our site.\n\nUnsubscribe: https://starlane.example/unsubscribe",
+    "daysAgo": 30,
+    "time": "17:45",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Sunday Dispatch",
+      "email": "edition@sundaydispatch.example"
+    },
+    "subject": "The Sunday Dispatch: a map of local libraries",
+    "body": "This week: borrowing, building and what a card still gets you.\n\nRead more on our site.\n\nUnsubscribe: https://sundaydispatch.example/unsubscribe",
+    "daysAgo": 29,
+    "time": "06:19",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "PulseFit",
+      "email": "coach@pulsefit.example"
+    },
+    "subject": "Recovery week: why rest makes you stronger",
+    "body": "Sleep, stretching and one very good walk. Here is how to plan it.\n\nRead more on our site.\n\nUnsubscribe: https://pulsefit.example/unsubscribe",
+    "daysAgo": 29,
+    "time": "12:27",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Loudwave Podcasts",
+      "email": "listen@loudwave.example"
+    },
+    "subject": "Behind the mic: how we make one episode",
+    "body": "From a scribbled idea to a published show in 12 days.\n\nRead more on our site.\n\nUnsubscribe: https://loudwave.example/unsubscribe",
+    "daysAgo": 28,
+    "time": "11:20",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Jonas Weber",
+      "email": "jonas.weber@inboxhub.example"
+    },
+    "subject": "Thoughts on this article?",
+    "body": "Sent a link about remote work habits. Curious what you think.",
+    "daysAgo": 28,
+    "time": "12:15",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Wayfarer Deals",
+      "email": "offers@wayfarerdeals.example"
+    },
+    "subject": "Hidden gems: 6 small towns worth the detour",
+    "body": "No crowds, great food, and prices that make sense.\n\nRead more on our site.\n\nUnsubscribe: https://wayfarerdeals.example/unsubscribe",
+    "daysAgo": 27,
+    "time": "09:52",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "SecureID",
+      "email": "security@secureid.example"
+    },
+    "subject": "Your security code",
+    "body": "Your one-time code is 482 019. It expires in 10 minutes. Never share it.",
+    "daysAgo": 27,
+    "time": "17:47",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Reelhouse",
+      "email": "new@reelhouse.example"
+    },
+    "subject": "Top 10 right now, and why they work",
+    "body": "A mix of comfort rewatches and sharp new releases.\n\nRead more on our site.\n\nUnsubscribe: https://reelhouse.example/unsubscribe",
+    "daysAgo": 26,
+    "time": "11:48",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Hammer & Nail Hardware",
+      "email": "deals@hammernail.example"
+    },
+    "subject": "DIY: build a floating shelf in an afternoon",
+    "body": "You need a drill, a level and one piece of good wood. Step-by-step inside.\n\nRead more on our site.\n\nUnsubscribe: https://hammernail.example/unsubscribe",
+    "daysAgo": 26,
+    "time": "14:07",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Cartwell Shop",
+      "email": "orders@cartwell.example"
+    },
+    "subject": "Order confirmed: #47988",
+    "body": "We received your order and are preparing it for shipment.",
+    "daysAgo": 25,
+    "time": "06:20",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Greenthumb Weekly",
+      "email": "garden@greenthumb.example"
+    },
+    "subject": "Compost troubleshooting: smells, flies and slime",
+    "body": "Almost every problem has a simple fix. Here are six of them.\n\nRead more on our site.\n\nUnsubscribe: https://greenthumb.example/unsubscribe",
+    "daysAgo": 25,
+    "time": "13:55",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Brewlane Coffee",
+      "email": "beans@brewlane.example"
+    },
+    "subject": "The winter blend is back",
+    "body": "Chocolate, toasted nuts and a hint of orange peel. Back for the cold months.\n\nRead more on our site.\n\nUnsubscribe: https://brewlane.example/unsubscribe",
+    "daysAgo": 24,
+    "time": "11:22",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Thread Local",
+      "email": "digest@threadlocal.example"
+    },
+    "subject": "Daily digest: 6 new replies in your followed topics",
+    "body": "The cycling commuters thread is still the busiest.\n\nRead more on our site.\n\nUnsubscribe: https://threadlocal.example/unsubscribe",
+    "daysAgo": 24,
+    "time": "12:31",
+    "unread": false,
+    "category": "forums"
+  },
+  {
+    "from": {
+      "name": "Elena Vasquez",
+      "email": "elena.v@inboxhub.example"
+    },
+    "subject": "Thank you for the lovely evening",
+    "body": "I had such a good time. We should do it again soon.",
+    "daysAgo": 24,
+    "time": "21:40",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Elm Street Market",
+      "email": "market@elmstreetmarket.example"
+    },
+    "subject": "Holiday market dates announced",
+    "body": "Mark your calendar: four Saturdays of wreaths, preserves and warm drinks.\n\nRead more on our site.\n\nUnsubscribe: https://elmstreetmarket.example/unsubscribe",
+    "daysAgo": 23,
+    "time": "07:49",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Gareth Pillai",
+      "email": "g.pillai@pillaiproperties.example"
+    },
+    "subject": "Annual inspection next month",
+    "body": "A reminder that the annual safety inspection is planned for the first week of December. I will confirm the exact day shortly.",
+    "daysAgo": 23,
+    "time": "10:00",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Pixel & Grain",
+      "email": "studio@pixelgrain.example"
+    },
+    "subject": "Type crush of the month: a quirky serif",
+    "body": "Quirks, ligatures and a surprisingly good italic. See it in action.\n\nRead more on our site.\n\nUnsubscribe: https://pixelgrain.example/unsubscribe",
+    "daysAgo": 22,
+    "time": "07:39",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Byte Weekly",
+      "email": "hello@byteweekly.example"
+    },
+    "subject": "Reader mailbag: your favorite dev setups",
+    "body": "Standing desks, two monitors, one monitor, no monitor. Here are the setups that got the most votes.\n\nRead more on our site.\n\nUnsubscribe: https://byteweekly.example/unsubscribe",
+    "daysAgo": 22,
+    "time": "08:11",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Sunday Dispatch",
+      "email": "edition@sundaydispatch.example"
+    },
+    "subject": "The Sunday Dispatch: lessons from a lost glove",
+    "body": "An essay, five links and one great recipe from a reader.\n\nRead more on our site.\n\nUnsubscribe: https://sundaydispatch.example/unsubscribe",
+    "daysAgo": 22,
+    "time": "15:44",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/web] Build passed: main (c09f1a7)",
+    "body": "All 209 checks passed in 3m 05s.",
+    "daysAgo": 22,
+    "time": "20:39",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Skillbarn",
+      "email": "learn@skillbarn.example"
+    },
+    "subject": "Weekend flash sale: all courses $12",
+    "body": "Photography, baking, public speaking and more. Ends Sunday night.\n\nRead more on our site.\n\nUnsubscribe: https://skillbarn.example/unsubscribe",
+    "daysAgo": 21,
+    "time": "13:35",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Marcus Oyelaran",
+      "email": "marcus.oyelaran@northfield.example"
+    },
+    "subject": "Notes from today's meeting",
+    "body": "Summary: ship export by end of month, demo Friday, finance data still pending. Let me know if I missed anything.",
+    "daysAgo": 21,
+    "time": "17:50",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Friendloop",
+      "email": "notify@friendloop.example"
+    },
+    "subject": "Rafael Quintero invited you to a event: Game night",
+    "body": "Saturday, 7:30 pm. Say whether you can make it.\n\nRead more on our site.\n\nUnsubscribe: https://friendloop.example/unsubscribe",
+    "daysAgo": 21,
+    "time": "19:51",
+    "unread": false,
+    "category": "social"
+  },
+  {
+    "from": {
+      "name": "Amara Okafor",
+      "email": "amara.okafor@mailbox.example"
+    },
+    "subject": "Book club: next pick",
+    "body": "Votes are in! The next book is the one about the lighthouse. We meet Wednesday at 19:00. Who is bringing snacks?",
+    "daysAgo": 20,
+    "time": "12:10",
+    "unread": false,
+    "category": "primary",
+    "thread": "book-club"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Amara Okafor",
+        "email": "amara.okafor@mailbox.example"
+      }
+    ],
+    "subject": "Re: Book club: next pick",
+    "body": "I can bring something, maybe lemon cake. Is that okay?",
+    "daysAgo": 20,
+    "time": "13:05",
+    "unread": false,
+    "category": "primary",
+    "thread": "book-club"
+  },
+  {
+    "from": {
+      "name": "Amara Okafor",
+      "email": "amara.okafor@mailbox.example"
+    },
+    "subject": "Re: Book club: next pick",
+    "body": "Lemon cake is always welcome. See you Wednesday!",
+    "daysAgo": 20,
+    "time": "13:30",
+    "unread": false,
+    "category": "primary",
+    "thread": "book-club"
+  },
+  {
+    "from": {
+      "name": "Calendar",
+      "email": "reminders@calendar.mailbox.example"
+    },
+    "subject": "Reminder: Book club, Wed at 19:00",
+    "body": "Wednesday at 19:00. Location: the usual cafe.",
+    "daysAgo": 20,
+    "time": "14:07",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Penny Wise",
+      "email": "tips@pennywise.example"
+    },
+    "subject": "Year-end money checklist",
+    "body": "Review benefits, check your goals and book that dentist visit before the year closes.\n\nRead more on our site.\n\nUnsubscribe: https://pennywise.example/unsubscribe",
+    "daysAgo": 20,
+    "time": "15:07",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "Sunday bake: cardamom buns without the fuss",
+    "body": "A forgiving dough, a sticky glaze, and a kitchen that smells like a bakery.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 20,
+    "time": "18:04",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Tomasz Kowalski",
+      "email": "tomasz.kowalski@northfield.example"
+    },
+    "subject": "Docs review: onboarding guide",
+    "body": "Could you take a look at the new onboarding guide and flag anything out of date?",
+    "daysAgo": 19,
+    "time": "14:25",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Pageturn Books",
+      "email": "news@pageturn.example"
+    },
+    "subject": "Buy 2 get 1 free on paperbacks, this week only",
+    "body": "Fill a tote bag and treat yourself. Offer ends Sunday.\n\nRead more on our site.\n\nUnsubscribe: https://pageturn.example/unsubscribe",
+    "daysAgo": 19,
+    "time": "14:37",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Starlane Rewards",
+      "email": "points@starlane.example"
+    },
+    "subject": "Your tier update: you are now Silver",
+    "body": "Enjoy early access to sales and free shipping on orders over $25.\n\nRead more on our site.\n\nUnsubscribe: https://starlane.example/unsubscribe",
+    "daysAgo": 19,
+    "time": "18:28",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Noor Khalid",
+      "email": "noor.khalid@northfield.example"
+    },
+    "subject": "Welcome back! Quick catch-up",
+    "body": "Hope the break was relaxing. When you have time, I would like 15 minutes to catch you up on what changed.",
+    "daysAgo": 18,
+    "time": "09:00",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Bloomery Flowers",
+      "email": "hello@bloomery.example"
+    },
+    "subject": "Dried flowers that last all winter",
+    "body": "Wreaths and bundles made by small growers.\n\nRead more on our site.\n\nUnsubscribe: https://bloomery.example/unsubscribe",
+    "daysAgo": 18,
+    "time": "09:09",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Loudwave Podcasts",
+      "email": "listen@loudwave.example"
+    },
+    "subject": "Season finale tonight at 8pm",
+    "body": "All the loose ends tied up, plus a live Q&A with the hosts afterward.\n\nRead more on our site.\n\nUnsubscribe: https://loudwave.example/unsubscribe",
+    "daysAgo": 18,
+    "time": "10:35",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Wayfarer Deals",
+      "email": "offers@wayfarerdeals.example"
+    },
+    "subject": "Last-minute deals for the long weekend",
+    "body": "Pack light, book fast. These rooms are going quickly.\n\nRead more on our site.\n\nUnsubscribe: https://wayfarerdeals.example/unsubscribe",
+    "daysAgo": 17,
+    "time": "10:17",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Parcelo Delivery",
+      "email": "tracking@parcelo.example"
+    },
+    "subject": "Your package is on its way",
+    "body": "Shipped from our Ridgeway depot. Estimated delivery: Thursday.",
+    "daysAgo": 17,
+    "time": "19:50",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "PulseFit",
+      "email": "coach@pulsefit.example"
+    },
+    "subject": "Join the November step challenge",
+    "body": "Teams of five, one shared goal, small prizes. Sign up before Friday.\n\nRead more on our site.\n\nUnsubscribe: https://pulsefit.example/unsubscribe",
+    "daysAgo": 16,
+    "time": "08:05",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Trailhead Outdoors",
+      "email": "trails@trailhead.example"
+    },
+    "subject": "5 easy trails with big autumn views",
+    "body": "Short walks, long views. Pick your weekend.\n\nRead more on our site.\n\nUnsubscribe: https://trailhead.example/unsubscribe",
+    "daysAgo": 16,
+    "time": "11:40",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Jonas Weber",
+      "email": "jonas.weber@inboxhub.example"
+    },
+    "subject": "Recommendation: that podcast I mentioned",
+    "body": "It is the one about bridges, I promise it is better than it sounds. Start with episode 3.",
+    "daysAgo": 16,
+    "time": "22:10",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Hammer & Nail Hardware",
+      "email": "deals@hammernail.example"
+    },
+    "subject": "20% off tools this weekend only",
+    "body": "Cordless drills, hand tools and storage on sale in store and online.\n\nRead more on our site.\n\nUnsubscribe: https://hammernail.example/unsubscribe",
+    "daysAgo": 15,
+    "time": "13:34",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Sunday Dispatch",
+      "email": "edition@sundaydispatch.example"
+    },
+    "subject": "The Sunday Dispatch: autumn in numbers",
+    "body": "Rain totals, apple prices and the surprising rise of the thermos.\n\nRead more on our site.\n\nUnsubscribe: https://sundaydispatch.example/unsubscribe",
+    "daysAgo": 15,
+    "time": "16:29",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Byte Weekly",
+      "email": "hello@byteweekly.example"
+    },
+    "subject": "Why everyone is talking about local-first apps",
+    "body": "Syncing without a server sounds like magic. We break down how it works and where it falls short.\n\nRead more on our site.\n\nUnsubscribe: https://byteweekly.example/unsubscribe",
+    "daysAgo": 15,
+    "time": "18:04",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Cartwell Shop",
+      "email": "orders@cartwell.example"
+    },
+    "subject": "Receipt for your purchase",
+    "body": "Thanks for shopping with us. Order total: $64.20. Payment: card ending in the one you used.",
+    "daysAgo": 14,
+    "time": "07:30",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Brewlane Coffee",
+      "email": "beans@brewlane.example"
+    },
+    "subject": "Brewing guide: dial in your pour-over",
+    "body": "Three small changes that make a big difference: grind, water temperature, patience.\n\nRead more on our site.\n\nUnsubscribe: https://brewlane.example/unsubscribe",
+    "daysAgo": 14,
+    "time": "09:46",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Reelhouse",
+      "email": "new@reelhouse.example"
+    },
+    "subject": "Coming Friday: the season you waited for",
+    "body": "Eight episodes, all at once. Set a reminder so you do not miss the premiere.\n\nRead more on our site.\n\nUnsubscribe: https://reelhouse.example/unsubscribe",
+    "daysAgo": 14,
+    "time": "16:34",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Kenji Watanabe",
+      "email": "kenji.w@inboxhub.example"
+    },
+    "subject": "Gym tomorrow morning?",
+    "body": "I am going at 7. Want to join? Fair warning, it is leg day.",
+    "daysAgo": 14,
+    "time": "21:05",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Skillbarn",
+      "email": "learn@skillbarn.example"
+    },
+    "subject": "New course: Spreadsheet Magic for Busy People",
+    "body": "Formulas, pivots and charts in six short lessons. First lesson free.\n\nRead more on our site.\n\nUnsubscribe: https://skillbarn.example/unsubscribe",
+    "daysAgo": 13,
+    "time": "06:59",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/web] Pull request merged: Update dependencies",
+    "body": "Pull request #471 was merged into main.",
+    "daysAgo": 13,
+    "time": "08:28",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Diego Herrera",
+      "email": "diego.herrera@mailbox.example"
+    },
+    "subject": "Birthday dinner for Mia, save the date",
+    "body": "Mia turns 30 on the 21st. We are planning a small dinner, around 8 people. Details to follow, but please save the date.",
+    "daysAgo": 13,
+    "time": "13:30",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "The pumpkin recipe we make every November",
+    "body": "Spiced, silky, and best with a swirl of yogurt. Includes a vegan swap.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 13,
+    "time": "14:29",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Pixel & Grain",
+      "email": "studio@pixelgrain.example"
+    },
+    "subject": "Free download: 40 hand-drawn texture brushes",
+    "body": "Grab them before the end of the week. No sign-up needed beyond this email.\n\nRead more on our site.\n\nUnsubscribe: https://pixelgrain.example/unsubscribe",
+    "daysAgo": 12,
+    "time": "08:20",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Friendloop",
+      "email": "notify@friendloop.example"
+    },
+    "subject": "Memories: this day, three years ago",
+    "body": "Look back at your photos from the lake trip.\n\nRead more on our site.\n\nUnsubscribe: https://friendloop.example/unsubscribe",
+    "daysAgo": 12,
+    "time": "12:52",
+    "unread": false,
+    "category": "social"
+  },
+  {
+    "from": {
+      "name": "Elm Street Market",
+      "email": "market@elmstreetmarket.example"
+    },
+    "subject": "Meet the farmers: Hollis Family Orchard",
+    "body": "Three generations, nineteen apple varieties, and one very opinionated dog.\n\nRead more on our site.\n\nUnsubscribe: https://elmstreetmarket.example/unsubscribe",
+    "daysAgo": 12,
+    "time": "18:41",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Sofia Lindqvist",
+      "email": "sofia.l@inboxhub.example"
+    },
+    "subject": "Photos from the coast trip",
+    "body": "Finally got all the photos sorted! Here is the shared album. The sunset one is my favorite.",
+    "daysAgo": 12,
+    "time": "21:10",
+    "unread": false,
+    "category": "primary",
+    "thread": "trip-photos"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Sofia Lindqvist",
+        "email": "sofia.l@inboxhub.example"
+      }
+    ],
+    "subject": "Re: Photos from the coast trip",
+    "body": "These are great, especially the one of us on the pier. Thank you for organizing!",
+    "daysAgo": 12,
+    "time": "22:00",
+    "unread": false,
+    "category": "primary",
+    "thread": "trip-photos"
+  },
+  {
+    "from": {
+      "name": "Sofia Lindqvist",
+      "email": "sofia.l@inboxhub.example"
+    },
+    "subject": "Re: Photos from the coast trip",
+    "body": "Glad you like them. Same trip next year?",
+    "daysAgo": 11,
+    "time": "08:05",
+    "unread": false,
+    "category": "primary",
+    "thread": "trip-photos"
+  },
+  {
+    "from": {
+      "name": "Pageturn Books",
+      "email": "news@pageturn.example"
+    },
+    "subject": "New arrivals: fall fiction and fresh memoirs",
+    "body": "Signed copies are limited. Pre-order the author events happening this month.\n\nRead more on our site.\n\nUnsubscribe: https://pageturn.example/unsubscribe",
+    "daysAgo": 11,
+    "time": "08:07",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Greenthumb Weekly",
+      "email": "garden@greenthumb.example"
+    },
+    "subject": "Bring your herbs indoors before the frost",
+    "body": "Basil sulks, rosemary shrugs. How to move each one gently.\n\nRead more on our site.\n\nUnsubscribe: https://greenthumb.example/unsubscribe",
+    "daysAgo": 11,
+    "time": "09:36",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Thread Local",
+      "email": "digest@threadlocal.example"
+    },
+    "subject": "Weekly digest: trending in Home Repair",
+    "body": "Squeaky floors, stuck windows and the great caulk debate.\n\nRead more on our site.\n\nUnsubscribe: https://threadlocal.example/unsubscribe",
+    "daysAgo": 11,
+    "time": "12:07",
+    "unread": false,
+    "category": "forums"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Gareth Pillai",
+        "email": "g.pillai@pillaiproperties.example"
+      }
+    ],
+    "subject": "Kitchen tap leaking",
+    "body": "Hi Gareth, the kitchen tap has started leaking under the sink. Could someone take a look this week?",
+    "daysAgo": 11,
+    "time": "19:15",
+    "unread": false,
+    "category": "primary",
+    "thread": "landlord"
+  },
+  {
+    "from": {
+      "name": "Gareth Pillai",
+      "email": "g.pillai@pillaiproperties.example"
+    },
+    "subject": "Re: Kitchen tap leaking",
+    "body": "Sorry to hear that. I can send the plumber on Thursday between 9 and 12. Does that work?",
+    "daysAgo": 10,
+    "time": "08:40",
+    "unread": false,
+    "category": "primary",
+    "thread": "landlord"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Gareth Pillai",
+        "email": "g.pillai@pillaiproperties.example"
+      }
+    ],
+    "subject": "Re: Kitchen tap leaking",
+    "body": "Thursday morning is fine, I will be working from home.",
+    "daysAgo": 10,
+    "time": "09:05",
+    "unread": false,
+    "category": "primary",
+    "thread": "landlord"
+  },
+  {
+    "from": {
+      "name": "PulseFit",
+      "email": "coach@pulsefit.example"
+    },
+    "subject": "Your October recap is ready",
+    "body": "You moved 19 days last month. That is 4 more than September. Keep it going!\n\nRead more on our site.\n\nUnsubscribe: https://pulsefit.example/unsubscribe",
+    "daysAgo": 10,
+    "time": "13:23",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "SecureID",
+      "email": "security@secureid.example"
+    },
+    "subject": "New sign-in to your account from a laptop",
+    "body": "We noticed a new sign-in on Windows. If this was you, no action is needed.",
+    "daysAgo": 10,
+    "time": "18:47",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Penny Wise",
+      "email": "tips@pennywise.example"
+    },
+    "subject": "How to build a $1,000 buffer in 90 days",
+    "body": "Small automatic transfers, one weekly check-in, and a little patience.\n\nRead more on our site.\n\nUnsubscribe: https://pennywise.example/unsubscribe",
+    "daysAgo": 10,
+    "time": "18:54",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Wayfarer Deals",
+      "email": "offers@wayfarerdeals.example"
+    },
+    "subject": "Your winter getaway starts here",
+    "body": "Warm beaches, snowy cabins, and cheap flights in between. Pick your climate.\n\nRead more on our site.\n\nUnsubscribe: https://wayfarerdeals.example/unsubscribe",
+    "daysAgo": 9,
+    "time": "10:09",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Gareth Pillai",
+      "email": "g.pillai@pillaiproperties.example"
+    },
+    "subject": "Re: Kitchen tap leaking",
+    "body": "Plumber confirmed for Thursday morning. He will call when he is close.",
+    "daysAgo": 9,
+    "time": "12:30",
+    "unread": false,
+    "category": "primary",
+    "thread": "landlord"
+  },
+  {
+    "from": {
+      "name": "Loudwave Podcasts",
+      "email": "listen@loudwave.example"
+    },
+    "subject": "Binge list: 5 shows to fill your commute",
+    "body": "Mystery, comedy and one surprisingly gripping show about bridges.\n\nRead more on our site.\n\nUnsubscribe: https://loudwave.example/unsubscribe",
+    "daysAgo": 9,
+    "time": "16:30",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Parcelo Delivery",
+      "email": "tracking@parcelo.example"
+    },
+    "subject": "Delivered: left at front door",
+    "body": "Your package was delivered at 15:12 and left at the front door.",
+    "daysAgo": 9,
+    "time": "21:00",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Sunday Dispatch",
+      "email": "edition@sundaydispatch.example"
+    },
+    "subject": "The Sunday Dispatch: the quiet economics of cheese",
+    "body": "Plus a long read about a town that rebuilt its library by hand.\n\nRead more on our site.\n\nUnsubscribe: https://sundaydispatch.example/unsubscribe",
+    "daysAgo": 8,
+    "time": "07:16",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Byte Weekly",
+      "email": "hello@byteweekly.example"
+    },
+    "subject": "The 10-minute guide to better code reviews",
+    "body": "Our readers share what makes a review useful instead of exhausting. Plus: a small tool that formats your commit messages.\n\nRead more on our site.\n\nUnsubscribe: https://byteweekly.example/unsubscribe",
+    "daysAgo": 8,
+    "time": "15:31",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Harbor Credit Union",
+      "email": "statements@harborcu.example"
+    },
+    "subject": "Your October statement is ready",
+    "body": "Your monthly statement is now available. Sign in to the secure site to view it.",
+    "daysAgo": 8,
+    "time": "15:31",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Starlane Rewards",
+      "email": "points@starlane.example"
+    },
+    "subject": "Double points on weekends this month",
+    "body": "Shop any Saturday or Sunday and earn twice as fast.\n\nRead more on our site.\n\nUnsubscribe: https://starlane.example/unsubscribe",
+    "daysAgo": 8,
+    "time": "16:35",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Diego Herrera",
+      "email": "diego.herrera@mailbox.example"
+    },
+    "subject": "Congrats on the new place!",
+    "body": "Heard you are all settled in. Housewarming soon? I volunteer to bring snacks.",
+    "daysAgo": 8,
+    "time": "19:30",
+    "unread": false,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Brewlane Coffee",
+      "email": "beans@brewlane.example"
+    },
+    "subject": "Your subscription ships soon: swap beans?",
+    "body": "Want something different in your next bag? Update your pick before Thursday.\n\nRead more on our site.\n\nUnsubscribe: https://brewlane.example/unsubscribe",
+    "daysAgo": 7,
+    "time": "07:37",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Amara Okafor",
+      "email": "amara.okafor@mailbox.example"
+    },
+    "subject": "Re: Book club: next pick",
+    "body": "Thanks for coming last night. Next meeting is the 25th. Same cafe?",
+    "daysAgo": 7,
+    "time": "10:45",
+    "unread": false,
+    "category": "primary",
+    "thread": "book-club"
+  },
+  {
+    "from": {
+      "name": "Bloomery Flowers",
+      "email": "hello@bloomery.example"
+    },
+    "subject": "A bouquet to brighten the grey days",
+    "body": "Seasonal stems, hand-tied and delivered fresh to your door. First order 20% off.\n\nRead more on our site.\n\nUnsubscribe: https://bloomery.example/unsubscribe",
+    "daysAgo": 7,
+    "time": "12:03",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/api] Build failed: fix/retry-logic (7be03d1)",
+    "body": "Two tests failed in retry_spec. See the logs for details.",
+    "daysAgo": 7,
+    "time": "17:05",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Reelhouse",
+      "email": "new@reelhouse.example"
+    },
+    "subject": "Because you watched slow-burn thrillers",
+    "body": "Seven titles you may have missed, picked just for you.\n\nRead more on our site.\n\nUnsubscribe: https://reelhouse.example/unsubscribe",
+    "daysAgo": 6,
+    "time": "08:03",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Northwind Air",
+      "email": "bookings@northwindair.example"
+    },
+    "subject": "Your itinerary: Fri 20 Nov, departing 07:45",
+    "body": "Booking reference QX7M2L.\nOutbound: Fri 20 Nov, 07:45 to 10:30. Return: Mon 23 Nov, 18:10.\nCheck-in opens 24 hours before departure.",
+    "daysAgo": 6,
+    "time": "14:02",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Tomasz Kowalski",
+      "email": "tomasz.kowalski@northfield.example"
+    },
+    "subject": "Interview scheduling: Backend candidate",
+    "body": "Could you take the 45-minute technical interview on Tuesday at 14:00? Candidate is strong on distributed systems.",
+    "daysAgo": 6,
+    "time": "16:30",
+    "unread": false,
+    "category": "primary",
+    "thread": "interview"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Tomasz Kowalski",
+        "email": "tomasz.kowalski@northfield.example"
+      }
+    ],
+    "subject": "Re: Interview scheduling: Backend candidate",
+    "body": "Tuesday 14:00 works. Please send me the resume and the rubric.",
+    "daysAgo": 6,
+    "time": "17:10",
+    "unread": false,
+    "category": "primary",
+    "thread": "interview"
+  },
+  {
+    "from": {
+      "name": "Tomasz Kowalski",
+      "email": "tomasz.kowalski@northfield.example"
+    },
+    "subject": "Re: Interview scheduling: Backend candidate",
+    "body": "Sent both. Thanks!",
+    "daysAgo": 6,
+    "time": "17:40",
+    "unread": false,
+    "category": "primary",
+    "thread": "interview"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "Soup season is here: 7 bowls to batch cook",
+    "body": "From roasted tomato to a hearty barley and mushroom, these freeze beautifully.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 6,
+    "time": "17:44",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Lumen Power",
+      "email": "billing@lumenpower.example"
+    },
+    "subject": "Your electricity bill is ready",
+    "body": "Your latest bill is available. Amount due is shown in your online account. Due in 14 days.",
+    "daysAgo": 5,
+    "time": "06:10",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Trailhead Outdoors",
+      "email": "trails@trailhead.example"
+    },
+    "subject": "Cold-weather hiking gear, simplified",
+    "body": "Layers that work, socks that matter, and a thermos worth buying.\n\nRead more on our site.\n\nUnsubscribe: https://trailhead.example/unsubscribe",
+    "daysAgo": 5,
+    "time": "08:05",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Brightside Studio Billing",
+      "email": "accounts@brightsidestudio.example"
+    },
+    "subject": "Question about invoice 1043",
+    "body": "Hi, we noticed invoice 1043 is still open. Could you confirm whether it is scheduled for payment this week?",
+    "daysAgo": 5,
+    "time": "14:02",
+    "unread": false,
+    "category": "primary",
+    "thread": "invoice-q"
+  },
+  {
+    "from": {
+      "name": "PulseFit",
+      "email": "coach@pulsefit.example"
+    },
+    "subject": "New: 15-minute mobility flows for desk days",
+    "body": "Hips, shoulders and upper back, all without leaving your chair area.\n\nRead more on our site.\n\nUnsubscribe: https://pulsefit.example/unsubscribe",
+    "daysAgo": 5,
+    "time": "14:21",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Brightside Studio Billing",
+        "email": "accounts@brightsidestudio.example"
+      }
+    ],
+    "subject": "Re: Question about invoice 1043",
+    "body": "Thanks for the nudge. I forwarded it to our finance team and will confirm the payment date tomorrow.",
+    "daysAgo": 5,
+    "time": "15:20",
+    "unread": false,
+    "category": "primary",
+    "thread": "invoice-q"
+  },
+  {
+    "from": {
+      "name": "Hammer & Nail Hardware",
+      "email": "deals@hammernail.example"
+    },
+    "subject": "Winterize your home: 12 jobs for this weekend",
+    "body": "Weatherstrip doors, drain hoses, check detectors. We put together a simple checklist.\n\nRead more on our site.\n\nUnsubscribe: https://hammernail.example/unsubscribe",
+    "daysAgo": 4,
+    "time": "07:13",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Brightside Studio Billing",
+      "email": "accounts@brightsidestudio.example"
+    },
+    "subject": "Re: Question about invoice 1043",
+    "body": "Wonderful, thank you. No rush, just keeping our books tidy.",
+    "daysAgo": 4,
+    "time": "09:10",
+    "unread": false,
+    "category": "primary",
+    "thread": "invoice-q"
+  },
+  {
+    "from": {
+      "name": "Skillbarn",
+      "email": "learn@skillbarn.example"
+    },
+    "subject": "Finish what you started: 3 courses waiting",
+    "body": "You are 60 percent through Intro to Watercolor. Pick up where you left off.\n\nRead more on our site.\n\nUnsubscribe: https://skillbarn.example/unsubscribe",
+    "daysAgo": 4,
+    "time": "10:00",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Noor Khalid",
+      "email": "noor.khalid@northfield.example"
+    },
+    "subject": "Team offsite: dates and venue",
+    "body": "Hello all, we have two options for the offsite: 3-4 Dec at the lakeside lodge, or 10-11 Dec in the city. Please vote by Wednesday.",
+    "daysAgo": 4,
+    "time": "10:00",
+    "unread": false,
+    "category": "primary",
+    "thread": "offsite",
+    "starred": true
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Noor Khalid",
+        "email": "noor.khalid@northfield.example"
+      }
+    ],
+    "subject": "Re: Team offsite: dates and venue",
+    "body": "Lakeside lodge for me. A change of scenery would be good.",
+    "daysAgo": 4,
+    "time": "11:25",
+    "unread": false,
+    "category": "primary",
+    "thread": "offsite"
+  },
+  {
+    "from": {
+      "name": "Friendloop",
+      "email": "notify@friendloop.example"
+    },
+    "subject": "You have 5 new notifications",
+    "body": "Your photo got 12 likes and 2 comments.\n\nRead more on our site.\n\nUnsubscribe: https://friendloop.example/unsubscribe",
+    "daysAgo": 4,
+    "time": "18:19",
+    "unread": false,
+    "category": "social"
+  },
+  {
+    "from": {
+      "name": "Calendar",
+      "email": "reminders@calendar.mailbox.example"
+    },
+    "subject": "Invitation: Team offsite planning, Thu 12 Nov",
+    "body": "You have been invited to a 60-minute planning session.",
+    "daysAgo": 4,
+    "time": "19:32",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Greenthumb Weekly",
+      "email": "garden@greenthumb.example"
+    },
+    "subject": "Plant your garlic now: a 5-step guide",
+    "body": "Pick firm bulbs, plant them pointy side up and mulch well. Spring-you will say thanks.\n\nRead more on our site.\n\nUnsubscribe: https://greenthumb.example/unsubscribe",
+    "daysAgo": 3,
+    "time": "06:50",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Noor Khalid",
+      "email": "noor.khalid@northfield.example"
+    },
+    "subject": "Re: Team offsite: dates and venue",
+    "body": "Noted. So far lakeside is leading 6 to 3. I will confirm on Thursday.",
+    "daysAgo": 3,
+    "time": "09:15",
+    "unread": false,
+    "category": "primary",
+    "thread": "offsite"
+  },
+  {
+    "from": {
+      "name": "Pageturn Books",
+      "email": "news@pageturn.example"
+    },
+    "subject": "Staff picks: cozy reads for dark evenings",
+    "body": "Twelve novels our booksellers cannot stop recommending, from quiet mysteries to slow-burn romances.\n\nRead more on our site.\n\nUnsubscribe: https://pageturn.example/unsubscribe",
+    "daysAgo": 3,
+    "time": "11:04",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Streamly",
+      "email": "billing@streamly.example"
+    },
+    "subject": "Your subscription will renew on 15 Nov",
+    "body": "Your monthly plan renews in 6 days. Manage your plan any time in settings.",
+    "daysAgo": 3,
+    "time": "14:59",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Thread Local",
+      "email": "digest@threadlocal.example"
+    },
+    "subject": "Daily digest: someone replied to your question",
+    "body": "A member answered your question in Home Networking. Come see the answer.\n\nRead more on our site.\n\nUnsubscribe: https://threadlocal.example/unsubscribe",
+    "daysAgo": 3,
+    "time": "17:32",
+    "unread": true,
+    "category": "forums"
+  },
+  {
+    "from": {
+      "name": "Elena Vasquez",
+      "email": "elena.v@inboxhub.example"
+    },
+    "subject": "Weekend plans?",
+    "body": "Hey! Are you free Saturday? Thinking a long walk by the river and then lunch somewhere warm.",
+    "daysAgo": 3,
+    "time": "18:20",
+    "unread": false,
+    "category": "primary",
+    "thread": "weekend-hike"
+  },
+  {
+    "from": {
+      "name": "Pixel & Grain",
+      "email": "studio@pixelgrain.example"
+    },
+    "subject": "Design inspiration: warm minimalism is back",
+    "body": "Soft palettes, chunky type and lots of breathing room. Twelve examples we loved.\n\nRead more on our site.\n\nUnsubscribe: https://pixelgrain.example/unsubscribe",
+    "daysAgo": 3,
+    "time": "18:52",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Elena Vasquez",
+        "email": "elena.v@inboxhub.example"
+      }
+    ],
+    "subject": "Re: Weekend plans?",
+    "body": "Yes! Saturday works. Morning is better for me, say 10:00?",
+    "daysAgo": 3,
+    "time": "19:05",
+    "unread": false,
+    "category": "primary",
+    "thread": "weekend-hike"
+  },
+  {
+    "from": {
+      "name": "Elena Vasquez",
+      "email": "elena.v@inboxhub.example"
+    },
+    "subject": "Re: Weekend plans?",
+    "body": "Perfect, 10:00 at the bridge. I will bring the thermos.",
+    "daysAgo": 3,
+    "time": "19:40",
+    "unread": false,
+    "category": "primary",
+    "thread": "weekend-hike"
+  },
+  {
+    "from": {
+      "name": "Cartwell Shop",
+      "email": "orders@cartwell.example"
+    },
+    "subject": "Your order has shipped",
+    "body": "Order #48213 is on its way. Items: 1 desk lamp, 2 notebooks.",
+    "daysAgo": 2,
+    "time": "06:26",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Penny Wise",
+      "email": "tips@pennywise.example"
+    },
+    "subject": "5 subscriptions you can cancel today",
+    "body": "Go through your statements and check for these common quiet leaks.\n\nRead more on our site.\n\nUnsubscribe: https://pennywise.example/unsubscribe",
+    "daysAgo": 2,
+    "time": "07:36",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Priya Raman",
+      "email": "priya.raman@northfield.example"
+    },
+    "subject": "Ledgerly: status before Thursday",
+    "body": "Hi, can you send me a short status on the reporting module before Thursday's sync? Just where we are and any blockers.",
+    "daysAgo": 2,
+    "time": "09:12",
+    "unread": false,
+    "category": "primary",
+    "thread": "project-status"
+  },
+  {
+    "from": {
+      "name": "Elm Street Market",
+      "email": "market@elmstreetmarket.example"
+    },
+    "subject": "This Saturday: apples, squash and live music",
+    "body": "Forty stalls, a cider tasting and the return of the bread guy. 8am to 1pm.\n\nRead more on our site.\n\nUnsubscribe: https://elmstreetmarket.example/unsubscribe",
+    "daysAgo": 2,
+    "time": "09:35",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Priya Raman",
+        "email": "priya.raman@northfield.example"
+      }
+    ],
+    "subject": "Re: Ledgerly: status before Thursday",
+    "body": "Sure. Reporting is about 80% done. Export works, filters are in review. Only blocker is the sample data from finance.",
+    "daysAgo": 2,
+    "time": "10:30",
+    "unread": false,
+    "category": "primary",
+    "thread": "project-status"
+  },
+  {
+    "from": {
+      "name": "Priya Raman",
+      "email": "priya.raman@northfield.example"
+    },
+    "subject": "Re: Ledgerly: status before Thursday",
+    "body": "Thanks. I will chase finance today. Can we move the demo to Friday morning?",
+    "daysAgo": 2,
+    "time": "11:05",
+    "unread": false,
+    "category": "primary",
+    "thread": "project-status"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Priya Raman",
+        "email": "priya.raman@northfield.example"
+      }
+    ],
+    "subject": "Re: Ledgerly: status before Thursday",
+    "body": "Friday morning is fine.",
+    "daysAgo": 2,
+    "time": "11:12",
+    "unread": false,
+    "category": "primary",
+    "thread": "project-status"
+  },
+  {
+    "from": {
+      "name": "Wayfarer Deals",
+      "email": "offers@wayfarerdeals.example"
+    },
+    "subject": "Flash sale: 48 hours, 30 cities from $89",
+    "body": "Weekend escapes are on sale until Wednesday midnight. Lisbon-style coastal towns and quiet mountain villages included.\n\nRead more on our site.\n\nUnsubscribe: https://wayfarerdeals.example/unsubscribe",
+    "daysAgo": 2,
+    "time": "17:44",
+    "unread": false,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Kenji Watanabe",
+      "email": "kenji.w@inboxhub.example"
+    },
+    "subject": "Can I borrow your ladder?",
+    "body": "Hey, hope you are well. I need to clean the gutters this weekend. Could I borrow your ladder on Saturday morning?",
+    "daysAgo": 2,
+    "time": "20:15",
+    "unread": true,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Priya Raman",
+      "email": "priya.raman@northfield.example"
+    },
+    "subject": "Re: Ledgerly: status before Thursday",
+    "body": "Great, invite sent. Also, nice work on the filters.",
+    "daysAgo": 1,
+    "time": "08:55",
+    "unread": true,
+    "category": "primary",
+    "thread": "project-status"
+  },
+  {
+    "from": {
+      "name": "Byte Weekly",
+      "email": "hello@byteweekly.example"
+    },
+    "subject": "This week in tech: tiny models, big ideas",
+    "body": "Five stories worth your coffee break: a hobbyist builds a language model that runs on a watch, a debate about browser tabs, and more.\n\nRead more on our site.\n\nUnsubscribe: https://byteweekly.example/unsubscribe",
+    "daysAgo": 1,
+    "time": "09:32",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Brewlane Coffee",
+      "email": "beans@brewlane.example"
+    },
+    "subject": "Fresh roast alert: Ethiopia washed, limited batch",
+    "body": "Notes of jasmine, peach and honey. Roasted Monday, ships today.\n\nRead more on our site.\n\nUnsubscribe: https://brewlane.example/unsubscribe",
+    "daysAgo": 1,
+    "time": "14:40",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Loudwave Podcasts",
+      "email": "listen@loudwave.example"
+    },
+    "subject": "New episode: The Lighthouse Keeper's Daughter",
+    "body": "A true story about a storm, a secret and a family that kept a light burning for sixty years.\n\nRead more on our site.\n\nUnsubscribe: https://loudwave.example/unsubscribe",
+    "daysAgo": 1,
+    "time": "16:30",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Northwind Air",
+      "email": "bookings@northwindair.example"
+    },
+    "subject": "Check-in opens soon for your trip",
+    "body": "Online check-in opens in 24 hours. Save time at the airport and choose your seat.",
+    "daysAgo": 1,
+    "time": "17:04",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Leila Haddad",
+      "email": "leila.haddad@mailbox.example"
+    },
+    "subject": "Dinner Friday?",
+    "body": "We are trying that new Lebanese place on Friday, 20:00. You in? I will book for four.",
+    "daysAgo": 1,
+    "time": "17:45",
+    "unread": true,
+    "category": "primary",
+    "thread": "dinner"
+  },
+  {
+    "from": "ME",
+    "to": [
+      {
+        "name": "Leila Haddad",
+        "email": "leila.haddad@mailbox.example"
+      }
+    ],
+    "subject": "Re: Dinner Friday?",
+    "body": "Yes, count me in!",
+    "daysAgo": 1,
+    "time": "18:10",
+    "unread": false,
+    "category": "primary",
+    "thread": "dinner"
+  },
+  {
+    "from": {
+      "name": "Reelhouse",
+      "email": "new@reelhouse.example"
+    },
+    "subject": "New this week: a heist comedy and a quiet drama",
+    "body": "Plus the return of a fan-favorite baking series and three documentaries.\n\nRead more on our site.\n\nUnsubscribe: https://reelhouse.example/unsubscribe",
+    "daysAgo": 1,
+    "time": "18:19",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Leila Haddad",
+      "email": "leila.haddad@mailbox.example"
+    },
+    "subject": "Re: Dinner Friday?",
+    "body": "Booked. See you there, bring your appetite.",
+    "daysAgo": 1,
+    "time": "18:20",
+    "unread": true,
+    "category": "primary",
+    "thread": "dinner"
+  },
+  {
+    "from": {
+      "name": "Sunday Dispatch",
+      "email": "edition@sundaydispatch.example"
+    },
+    "subject": "The Sunday Dispatch: what mattered this week",
+    "body": "Our editors pick six stories, one long read and one very good photograph.\n\nRead more on our site.\n\nUnsubscribe: https://sundaydispatch.example/unsubscribe",
+    "daysAgo": 1,
+    "time": "19:42",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Calendar",
+      "email": "reminders@calendar.mailbox.example"
+    },
+    "subject": "Reminder: Dentist appointment tomorrow",
+    "body": "Tomorrow, 08:30. Please arrive ten minutes early.",
+    "daysAgo": 1,
+    "time": "20:21",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/web] Review requested: Add CSV export",
+    "body": "Marcus Oyelaran requested your review on pull request #482.",
+    "daysAgo": 1,
+    "time": "20:33",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Saltpan Kitchen",
+      "email": "recipes@saltpan.example"
+    },
+    "subject": "One-pan lemon chicken your Tuesday needs",
+    "body": "Crispy skin, bright sauce, one pan to wash. Ready in 35 minutes with ingredients you probably own.\n\nRead more on our site.\n\nUnsubscribe: https://saltpan.example/unsubscribe",
+    "daysAgo": 0,
+    "time": "06:40",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Elena Vasquez",
+      "email": "elena.v@inboxhub.example"
+    },
+    "subject": "Re: Weekend plans?",
+    "body": "Quick update: forecast says light rain after 2pm. Still on?",
+    "daysAgo": 0,
+    "time": "07:48",
+    "unread": true,
+    "category": "primary",
+    "thread": "weekend-hike"
+  },
+  {
+    "from": {
+      "name": "Priya Raman",
+      "email": "priya.raman@northfield.example"
+    },
+    "subject": "Quarterly goals: draft attached",
+    "body": "Draft goals for next quarter are in the shared doc. Comments welcome by Friday.",
+    "daysAgo": 0,
+    "time": "08:05",
+    "unread": true,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Noor Khalid",
+      "email": "noor.khalid@northfield.example"
+    },
+    "subject": "Re: Team offsite: dates and venue",
+    "body": "Confirmed: lakeside lodge, 3-4 Dec. Please fill in dietary needs in the form.",
+    "daysAgo": 0,
+    "time": "08:20",
+    "unread": true,
+    "category": "primary",
+    "thread": "offsite"
+  },
+  {
+    "from": {
+      "name": "Thread Local",
+      "email": "digest@threadlocal.example"
+    },
+    "subject": "Daily digest: 14 new replies in your followed topics",
+    "body": "Top thread: Best way to learn bread baking at home? 38 replies.\n\nRead more on our site.\n\nUnsubscribe: https://threadlocal.example/unsubscribe",
+    "daysAgo": 0,
+    "time": "08:38",
+    "unread": true,
+    "category": "forums"
+  },
+  {
+    "from": {
+      "name": "Tomasz Kowalski",
+      "email": "tomasz.kowalski@northfield.example"
+    },
+    "subject": "Re: Interview scheduling: Backend candidate",
+    "body": "Feedback form is open if you want to submit your notes today.",
+    "daysAgo": 0,
+    "time": "09:35",
+    "unread": true,
+    "category": "primary",
+    "thread": "interview"
+  },
+  {
+    "from": {
+      "name": "Marcus Oyelaran",
+      "email": "marcus.oyelaran@northfield.example"
+    },
+    "subject": "Lunch tomorrow?",
+    "body": "There is a new noodle place near the office. Want to try it at 12:30?",
+    "daysAgo": 0,
+    "time": "09:50",
+    "unread": true,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "Amara Okafor",
+      "email": "amara.okafor@mailbox.example"
+    },
+    "subject": "Do you have the recipe?",
+    "body": "The soup you made last week was amazing. Can you share the recipe?",
+    "daysAgo": 0,
+    "time": "10:22",
+    "unread": true,
+    "category": "primary"
+  },
+  {
+    "from": {
+      "name": "PulseFit",
+      "email": "coach@pulsefit.example"
+    },
+    "subject": "You are 2 workouts away from your weekly goal",
+    "body": "Nice streak! A quick 20-minute session today would close your rings.\n\nRead more on our site.\n\nUnsubscribe: https://pulsefit.example/unsubscribe",
+    "daysAgo": 0,
+    "time": "11:17",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Starlane Rewards",
+      "email": "points@starlane.example"
+    },
+    "subject": "You have 1,240 points expiring soon",
+    "body": "Redeem them for a free drink, a gift card or a donation before month end.\n\nRead more on our site.\n\nUnsubscribe: https://starlane.example/unsubscribe",
+    "daysAgo": 0,
+    "time": "14:09",
+    "unread": true,
+    "category": "promotions"
+  },
+  {
+    "from": {
+      "name": "Parcelo Delivery",
+      "email": "tracking@parcelo.example"
+    },
+    "subject": "Your package is out for delivery today",
+    "body": "Expected between 2pm and 6pm. Track your parcel in the app.",
+    "daysAgo": 0,
+    "time": "15:02",
+    "unread": true,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Calendar",
+      "email": "reminders@calendar.mailbox.example"
+    },
+    "subject": "Reminder: Sprint planning at 10:00",
+    "body": "Today at 10:00 (45 min). Location: Meeting room Birch.",
+    "daysAgo": 0,
+    "time": "18:46",
+    "unread": false,
+    "category": "updates"
+  },
+  {
+    "from": {
+      "name": "Friendloop",
+      "email": "notify@friendloop.example"
+    },
+    "subject": "Dana Whitfield and 3 others posted new photos",
+    "body": "See what your friends have been up to this week.\n\nRead more on our site.\n\nUnsubscribe: https://friendloop.example/unsubscribe",
+    "daysAgo": 0,
+    "time": "19:37",
+    "unread": true,
+    "category": "social"
+  },
+  {
+    "from": {
+      "name": "CodeNest",
+      "email": "notifications@codenest.example"
+    },
+    "subject": "[ledgerly/web] Build passed: main (a41c9e2)",
+    "body": "All 214 checks passed in 3m 12s.",
+    "daysAgo": 0,
+    "time": "20:55",
+    "unread": true,
+    "category": "updates"
+  }
+]

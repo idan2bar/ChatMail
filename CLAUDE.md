@@ -33,7 +33,8 @@ Chrome extension (Manifest V3) that improves the Gmail UI.
   on/off switch (`chatmail:enabled` in `chrome.storage.local`, on unless `false`); changing it sets
   `chatmail:refreshPending`, which shows a "Refresh Gmail" note/button in the popup. The content script clears the flag
   on load, since loading Gmail applies the setting.
-- `build.mjs` – esbuild bundling into `dist/` (also copies the SDK's `pageWorld.js` to `dist/` root).
+- `build.mjs` – empties `dist/` first, then esbuild bundling into `dist/` (also copies the SDK's `pageWorld.js` to `dist/` root).
+- `scripts/demo-mail/` – one-off pages that fill the demo Gmail account with fictional sample mail and contacts (see its README); not part of the extension build.
 - `dist/` – build output; **this is the folder to load unpacked** in `chrome://extensions`. Gitignored.
 
 There is no test suite; verify by building, reloading the extension and the Gmail tab, and checking the panel and the
